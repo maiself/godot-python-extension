@@ -1,0 +1,11 @@
+.*
+!.git*
+
+*.so
+
+/bin/
+
+gdextension_interface.h
+extension_api.json
+
+

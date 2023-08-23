@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3 uid="uid://bb1vg4r4xnu6j"]
+
+[ext_resource type="Texture2D" uid="uid://cswr8vy4lt7dt" path="res://icon.png" id="1_5fqho"]
+[ext_resource type="Script" path="res://script_test/sprite.py" id="2_qhit4"]
+
+[node name="main" type="Node2D"]
+
+[node name="Icon" type="Sprite2D" parent="."]
+position = Vector2(154, 143)
+texture = ExtResource("1_5fqho")
+script = ExtResource("2_qhit4")
+script/source = null
+speed = 253.43

@@ -1,0 +1,9 @@
+[configuration]
+
+python_path = "res://"
+python_package = "example"
+
+[icons]
+
+Example = "res://python.svg"
+
