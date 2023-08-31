@@ -30,10 +30,9 @@ This project can be thought as having three layers:
 
 > **Note**
 >
-> This extension depends on the following currently unmerged pull requests to Godot:
+> This extension depends on the following currently unmerged pull request to Godot:
 >
 > - [Allow CallableCustom objects to be created from GDExtensions (extended) godotengine/godot#79005](https://github.com/godotengine/godot/pull/79005)
-> - [Expose PlaceHolderScriptInstance to GDExtension godotengine/godot#80394](https://github.com/godotengine/godot/pull/80394)
 
 To clone and initialize the repository:
 ```sh
