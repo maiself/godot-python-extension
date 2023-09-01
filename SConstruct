@@ -105,6 +105,24 @@ opts.Add(
 )
 
 opts.Add(
+	PathVariable(
+		key="python",
+		help="Path to the `python` to build against. Must be set together with `python_config`.",
+		default='python',
+		validator=build_utils.validate_executable,
+	)
+)
+
+opts.Add(
+	PathVariable(
+		key="python_config",
+		help="Path to the `python-config` to build against. Must be set together with `python`.",
+		default='python-config',
+		validator=build_utils.validate_executable,
+	)
+)
+
+opts.Add(
 	BoolVariable(
 		key="skip_module_embed",
 		help="Skip embedding the Godot module into the compiled library for faster iteration during development. Use with the GODOT_PYTHON_MODULE_LIB_DIR environment variable.",
@@ -262,16 +280,21 @@ env.Append(CCFLAGS = ['-fvisibility=hidden', *['-flto'] * with_lto]) # XXX
 env.Append(LINKFLAGS = ['-fvisibility=hidden', *['-flto'] * with_lto, *['-s'] * strip]) # XXX
 
 def _run_pyconfig(*args) -> list[str]:
-	pyconfig_path = 'python-config'
-	return subprocess.run([pyconfig_path, *args], capture_output=True, text=True).stdout.split()
+	return subprocess.run([env['python_config'], *args], capture_output=True, text=True).stdout.split()
 
 env.Append(LINKFLAGS = _run_pyconfig('--ldflags'))
 env.Append(LIBS = [lib.removeprefix('-l') for lib in _run_pyconfig('--embed', '--libs')])
 
 
 # XXX: is this the best way to get the library path?
-import sysconfig
-env.Append(CPPDEFINES = [f'PYTHON_LIBRARY_PATH=\\"{sysconfig.get_config_var("LDLIBRARY")}\\"'])
+PYTHON_LIBRARY_PATH = subprocess.run([env['python'], '-c',
+			'import sysconfig ; print(sysconfig.get_config_var("LDLIBRARY"))'
+		],
+		capture_output = True,
+		text = True
+	).stdout.strip()
+
+env.Append(CPPDEFINES = [f'PYTHON_LIBRARY_PATH=\\"{PYTHON_LIBRARY_PATH}\\"'])
 
 
 # set include paths
