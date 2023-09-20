@@ -469,7 +469,8 @@ class PythonScript(godot.ScriptExtension):
 		return python_language.PythonLanguage.get()
 
 	def _has_script_signal(self, signal: str) -> bool:
-		raise NotImplementedError
+		class_info = godot.exposition.get_class_info(self._class)
+		return signal in class_info.signals.keys()
 
 	def _get_script_signal_list(self) -> list[dict]:
 		return [
