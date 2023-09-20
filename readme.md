@@ -44,7 +44,7 @@ The path to the `godot` binary is needed to extract the `gdextension_interface.h
 
 > **Note**
 >
-> Currently this project has only been tested on Linux with Python version 3.11. Modifications to the [SConstruct](SConstruct) file may be needed for other platform configurations. Please submit issues and pull requests for any problems you run into.
+> Currently this project has only been tested on Linux with Python versions 3.11 and 3.12. Modifications to the [SConstruct](SConstruct) file may be needed for other platform configurations. Please submit issues and pull requests for any problems you run into.
 
 
 ## Development
