@@ -88,7 +88,7 @@ def format_func(doc, for_template = False):
 		ret = m.ret
 
 		def f(s):
-			s = re.sub('TypedArray<([\w.:]+)>', r'Array[\1]', s.replace('::', '.'))
+			s = re.sub(r'TypedArray<([\w.:]+)>', r'Array[\1]', s.replace('::', '.'))
 
 			#if True:
 			#	s = s.replace('godot.', '')
