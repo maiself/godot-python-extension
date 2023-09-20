@@ -28,12 +28,6 @@ This project can be thought as having three layers:
 
 ## Building
 
-> **Note**
->
-> This extension depends on the following currently unmerged pull request to Godot:
->
-> - [Allow CallableCustom objects to be created from GDExtensions (extended) godotengine/godot#79005](https://github.com/godotengine/godot/pull/79005)
-
 To clone and initialize the repository:
 ```sh
 git clone https://github.com/maiself/godot-python-extension.git
