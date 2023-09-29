@@ -144,10 +144,12 @@ def process_arch(env):
 
 
 def get_executable_path(key, env):
-	path = normalize_path(env.get(key), env)
-	if os.access(path, os.X_OK):
-		return path
-	return shutil.which(env.get(key))
+	val = env.get(key)
+
+	if os.path.sep in val:
+		return normalize_path(val, env)
+
+	return shutil.which(val)
 
 
 def validate_executable(key, val, env):
@@ -157,16 +159,22 @@ def validate_executable(key, val, env):
 	if not val:
 		raise UserError(f"Please specify a path for '{key}'")
 
-	path = normalize_path(val, env)
+	if os.path.sep in val:
+		path = normalize_path(val, env)
 
-	if os.access(path, os.X_OK):
-		return
+		if not os.path.exists(path):
+			raise UserError(f"Path '{key}' not found: {val!r}")
 
-	path = shutil.which(val)
+		elif not os.access(path, os.X_OK):
+			raise UserError(f"Path '{key}' is not executable: {val!r}")
 
-	if os.access(path, os.X_OK):
-		return
+	else:
+		path = shutil.which(val)
 
-	raise UserError(f"Path '{key}' is not executable: {val!r}")
+		if not path:
+			raise UserError(f"Path '{key}' is not an executable found in PATH: {val!r}")
+
+		elif not os.access(path, os.X_OK):
+			raise UserError(f"Path '{key}' is not executable: {val!r} (found in PATH as {path!r})")
 
 
