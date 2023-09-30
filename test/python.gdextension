@@ -1,6 +1,6 @@
 [configuration]
 
-compatibility_minimum = 4.1
+compatibility_minimum = 4.2
 entry_symbol = "python_extension_init"
 
 [libraries]
@@ -12,13 +12,13 @@ windows.release.x86_32 = "res://bin/libgodot-python.windows.template_release.x86
 windows.debug.x86_64 = "res://bin/libgodot-python.windows.template_debug.x86_64.dll"
 windows.release.x86_64 = "res://bin/libgodot-python.windows.template_release.x86_64.dll"
 
-linux.x86_64 = "res://bin/libgodot-python.linux.template_debug.x86_64.so"
+#linux.x86_64 = "res://bin/libgodot-python.linux.template_debug.x86_64.so"
 #linux.x86_64 = "res://bin/libgodot-python.linux.template_release.x86_64.so"
 
-#linux.debug.x86_64 = "res://bin/libgodot-python.linux.template_debug.x86_64.so"
-#linux.release.x86_64 = "res://bin/libgodot-python.linux.template_release.x86_64.so"
+linux.debug.x86_64 = "res://bin/libgodot-python.linux.template_debug.x86_64.so"
+linux.release.x86_64 = "res://bin/libgodot-python.linux.template_release.x86_64.so"
 
-#linuxbsd.debug.x86_64 = "res://bin/libgodot-python.linux.template_release.x86_64.so"
+#linuxbsd.debug.x86_64 = "res://bin/libgodot-python.linux.template_debug.x86_64.so"
 #linuxbsd.release.x86_64 = "res://bin/libgodot-python.linux.template_release.x86_64.so"
 
 linux.debug.arm64 = "res://bin/libgodot-python.linux.template_debug.arm64.so"

@@ -180,6 +180,16 @@ if scons_cache_path is not None:
 	Decider("MD5")
 
 
+def check_godot_version():
+	major, minor = [int(x)for x in subprocess.run([build_utils.get_executable_path('godot', env), '--version'],
+		text=True, capture_output=True, check=True).stdout.split('.')[:2]]
+
+	if (major << 16) + (minor << 8) < 0x040200:
+		raise RuntimeError(f'Godot version 4.2 or newer required.')
+
+check_godot_version()
+
+
 # ensure generated directory exists
 generated_path = pathlib.Path('src/.generated')
 generated_path.mkdir(exist_ok=True)

@@ -2,6 +2,7 @@
 #include <string>
 #include <cstdio>
 #include <cstring>
+#include <format>
 
 #ifdef UNIX_ENABLED
 #include <dlfcn.h>
@@ -203,6 +204,26 @@ extern "C" PYBIND11_EXPORT GDExtensionBool python_extension_init(
 #undef GDEXTENSION_API
 
 	extension_interface::get_godot_version(&extension_interface::godot_version);
+
+	GDExtensionGodotVersion minium_version = {.major = 4, .minor = 2, .patch = 0, .string = nullptr};
+
+	auto version_to_uint = [](const GDExtensionGodotVersion& version) -> uint32_t {
+		return (version.major << 16) + (version.minor << 8) + version.patch;
+	};
+
+	if(version_to_uint(extension_interface::godot_version) < version_to_uint(minium_version)) {
+		auto error_msg = std::format(
+			"Minimum required version for Python extension not met. Need v{}.{}.{} or newer, have v{}.{}.{}\n",
+			minium_version.major, minium_version.minor, minium_version.patch,
+			extension_interface::godot_version.major,
+			extension_interface::godot_version.minor,
+			extension_interface::godot_version.patch
+		);
+
+		extension_interface::print_error(error_msg.data(), __FUNCTION__, __FILE__, __LINE__, false);
+
+		return false;
+	}
 
 	initialization->initialize = initialize_python_module;
 	initialization->deinitialize = uninitialize_python_module;

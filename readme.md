@@ -28,6 +28,10 @@ This project can be thought as having three layers:
 
 ## Building
 
+> **Note**
+>
+> Godot version 4.2 or later is required to build and load this extension.
+
 To clone and initialize the repository:
 ```sh
 git clone https://github.com/maiself/godot-python-extension.git
