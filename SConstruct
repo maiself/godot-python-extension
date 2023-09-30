@@ -230,21 +230,31 @@ env.Alias("extract_api", [
 			'lib/godot/_internal/extension_api.json',
 			os.fspath(generated_path / 'gdextension_interface.h'),
 		],
-		source = os.fspath(_godot_mtime)
+		source = [
+			os.fspath(_godot_mtime),
+			builders.__file__
+		],
 	)
 ])
 
 env.Alias("generate_gdextension_api_table", [
 	env.GenerateGDExtensionAPITable(
 		target = os.fspath(generated_path / 'gdextension_api_table.h'),
-		source = 'extern/gdextension/gdextension_interface.h',
+		source = [
+			'extern/gdextension/gdextension_interface.h',
+			builders.__file__,
+			'./tools/generate_gdextension_api_table.py',
+		],
 	)
 ])
 
 env.Alias("archive_importer_r_string", [
 	env.MakeRString(
 		target = os.fspath(generated_path / 'archive_importer_r_string.h'),
-		source = 'lib/godot/_internal/utils/archive_importer.py',
+		source = [
+			'lib/godot/_internal/utils/archive_importer.py',
+			builders.__file__,
+		],
 	)
 ])
 
@@ -262,7 +272,10 @@ else:
 env.Alias("godot_module_archive", [
 	env.MakeGodotModuleArchive(
 		target = os.fspath(generated_path / 'godot_module_archive.cpp'),
-		source = godot_zip,
+		source = [
+			godot_zip,
+			builders.__file__,
+		],
 	)
 ])
 

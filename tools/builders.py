@@ -3,6 +3,8 @@ import pathlib
 import textwrap
 import subprocess
 import shutil
+import types
+import re
 
 from SCons.Script import *
 
@@ -19,8 +21,67 @@ def make_extract_api_action(target, source, env):
 
 	shutil.copy2(extern_gde / 'extension_api.json', api_info)
 
-	shutil.copy2(extern_gde / 'gdextension_interface.h', pathlib.Path('src/.generated'))
-	subprocess.run(['git', 'apply', '--directory=src/.generated/', 'tools/gde_interface_types.patch'], check=True)
+	_patch_gdextension_interface_header(
+		src = extern_gde / 'gdextension_interface.h',
+		dest = pathlib.Path('src/.generated') / 'gdextension_interface.h',
+	)
+
+
+def _patch_gdextension_interface_header(src: pathlib.Path, dest: pathlib.Path):
+	'''Patch `gdextension_interface.h` to use opaque pointers for type safety and deduction'''
+
+	# read source
+	code = src.read_text()
+
+	# replace pointer typedefs
+	def replace_pointer_typedef(match_):
+		groups = types.SimpleNamespace(**match_.groupdict())
+
+		if groups.type == 'MethodBind':
+			groups.usage = 'Const'
+
+		match groups.usage:
+			case 'Uninitialized':
+				return f'typedef struct GDExtensionUninitialized{groups.type} *GDExtensionUninitialized{groups.type}Ptr;'
+
+			case 'Const':
+				return f'typedef const struct GDExtensionOpaque{groups.type} *GDExtensionConst{groups.type}Ptr;'
+
+			case _:
+				return f'typedef struct GDExtensionOpaque{groups.type} *GDExtension{groups.type}Ptr;'
+
+	code = re.sub(r'typedef\s+(const\s+)?void\s*\*\s*GDExtension(?P<usage>Uninitialized|Const)?(?P<type>\w+?)Ptr;',
+		replace_pointer_typedef, code)
+
+	# add GDExtensionFloat typedef
+	code = re.sub(r'(typedef uint8_t GDExtensionBool;)', r'\1\ntypedef double GDExtensionFloat;', code)
+
+	# make method bind pointers const
+	code = re.sub(r'GDExtensionMethodBindPtr', 'GDExtensionConstMethodBindPtr', code)
+
+	# replace function typedefs
+	def replace_func_typedef(match_):
+		groups = types.SimpleNamespace(**match_.groupdict())
+		params = groups.params.split(',')
+
+		match groups.func:
+			case 'VariantFromTypeConstructorFunc':
+				# fix param const
+				params[1] = params[1].replace('GDExtensionTypePtr', 'GDExtensionConstTypePtr')
+				return match_[0].replace(f'({groups.params})', ','.join(params).join(['(', ')']))
+
+			case 'TypeFromVariantConstructorFunc':
+				# fix param const
+				params[1] = params[1].replace('GDExtensionVariantPtr', 'GDExtensionConstVariantPtr')
+				return match_[0].replace(f'({groups.params})', ','.join(params).join(['(', ')']))
+
+			case _:
+				return match_[0]
+
+	code = re.sub('typedef\s+.+?\(\*GDExtension(?P<func>\w+?)\)\((?P<params>.+?)\);', replace_func_typedef, code)
+
+	# write dest
+	dest.write_text(code)
 
 
 def make_generate_gdextension_api_table_action(target, source, env):
