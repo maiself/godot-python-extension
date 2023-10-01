@@ -2,7 +2,6 @@
 #include <string>
 #include <cstdio>
 #include <cstring>
-#include <format>
 
 #ifdef UNIX_ENABLED
 #include <dlfcn.h>
@@ -212,15 +211,16 @@ extern "C" PYBIND11_EXPORT GDExtensionBool python_extension_init(
 	};
 
 	if(version_to_uint(extension_interface::godot_version) < version_to_uint(minium_version)) {
-		auto error_msg = std::format(
-			"Minimum required version for Python extension not met. Need v{}.{}.{} or newer, have v{}.{}.{}\n",
+		char error_msg[256];
+		snprintf(error_msg, sizeof(error_msg),
+			"Minimum required version for Python extension not met. Need v%d.%d.%d or newer, have v%d.%d.%d\n",
 			minium_version.major, minium_version.minor, minium_version.patch,
 			extension_interface::godot_version.major,
 			extension_interface::godot_version.minor,
 			extension_interface::godot_version.patch
 		);
 
-		extension_interface::print_error(error_msg.data(), __FUNCTION__, __FILE__, __LINE__, false);
+		extension_interface::print_error(error_msg, __FUNCTION__, __FILE__, __LINE__, false);
 
 		return false;
 	}
