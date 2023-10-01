@@ -140,6 +140,15 @@ opts.Add(
 )
 
 
+opts.Add(
+	BoolVariable(
+		key="single_source",
+		help="Build using a single translation unit.",
+		default=False,
+	)
+)
+
+
 # Targets flags tool (optimizations, debug symbols)
 target_tool = Tool("targets", toolpath=["tools/platform"])
 target_tool.options(opts)
