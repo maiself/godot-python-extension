@@ -100,7 +100,8 @@ opts.Add(
 		key="godot",
 		help="Path to the `godot` binary, used to extract the `gdextension_interface.h` and `extension_api.json` files from the engine.",
 		default='',
-		validator=build_utils.validate_executable,
+		validator=(lambda key, val, env: build_utils.validate_executable(key, val, env)
+			if not env.get('skip_extract_api_files') else None),
 	)
 )
 
@@ -126,6 +127,14 @@ opts.Add(
 	BoolVariable(
 		key="skip_module_embed",
 		help="Skip embedding the Godot module into the compiled library for faster iteration during development. Use with the GODOT_PYTHON_MODULE_LIB_DIR environment variable.",
+		default=False,
+	)
+)
+
+opts.Add(
+	BoolVariable(
+		key="skip_extract_api_files",
+		help="Skip extracting the `gdextension_interface.h` and `extension_api.json` files from the engine. The files must already exist in `extern/gdextension/`.",
 		default=False,
 	)
 )
@@ -181,6 +190,12 @@ if scons_cache_path is not None:
 
 
 def check_godot_version():
+	if '--help' in sys.argv:
+		return
+
+	if env.get('skip_extract_api_files'):
+		return
+
 	major, minor = [int(x)for x in subprocess.run([build_utils.get_executable_path('godot', env), '--version'],
 		text=True, capture_output=True, check=True).stdout.split('.')[:2]]
 
@@ -196,7 +211,12 @@ generated_path.mkdir(exist_ok=True)
 
 # write mtime of godot binary, this is faster then using the binary as a dependency directly
 _godot_mtime = (generated_path / '.godot-mtime')
-_godot_mtime.write_text(str(pathlib.Path(build_utils.get_executable_path('godot', env)).stat().st_mtime) + '\n')
+if '--help' not in sys.argv:
+	_godot_mtime.write_text(
+		str(pathlib.Path(build_utils.get_executable_path('godot', env)).stat().st_mtime) + '\n'
+		if not env.get('skip_extract_api_files') else
+		'0\n'
+	)
 
 
 # gather sources
@@ -235,12 +255,18 @@ builders.init(env)
 env.Alias("extract_api", [
 	env.ExtractAPI(
 		target = [
-			'extern/gdextension/gdextension_interface.h',
-			'extern/gdextension/extension_api.json',
+			*[
+				'extern/gdextension/gdextension_interface.h',
+				'extern/gdextension/extension_api.json',
+			] * (not env.get('skip_extract_api_files')),
 			'lib/godot/_internal/extension_api.json',
 			os.fspath(generated_path / 'gdextension_interface.h'),
 		],
 		source = [
+			*[
+				'extern/gdextension/gdextension_interface.h',
+				'extern/gdextension/extension_api.json',
+			] * (env.get('skip_extract_api_files')),
 			os.fspath(_godot_mtime),
 			builders.__file__
 		],

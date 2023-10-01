@@ -12,12 +12,12 @@ from . import build_utils
 
 
 def make_extract_api_action(target, source, env):
-	godot = build_utils.get_executable_path('godot', env)
-
 	extern_gde = pathlib.Path('extern/gdextension').absolute()
 	api_info = pathlib.Path('lib/godot/_internal').absolute()
 
-	subprocess.run([godot, '--headless', '--dump-gdextension-interface', '--dump-extension-api'], cwd=extern_gde, check=True)
+	if not env.get('skip_extract_api_files'):
+		godot = build_utils.get_executable_path('godot', env)
+		subprocess.run([godot, '--headless', '--dump-gdextension-interface', '--dump-extension-api'], cwd=extern_gde, check=True)
 
 	shutil.copy2(extern_gde / 'extension_api.json', api_info)
 
