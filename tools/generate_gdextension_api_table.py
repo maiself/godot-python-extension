@@ -21,7 +21,7 @@ build_configuration = 'float_64' # XXX: add support for other build confguations
 
 
 def import_path_as(path: pathlib.Path, module_name: str, *, level: int = 0):
-	import importlib
+	import importlib.util
 	spec = importlib.util.spec_from_file_location(module_name, path)
 	module = importlib.util.module_from_spec(spec)
 	sys.modules[module_name] = module

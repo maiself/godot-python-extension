@@ -2,6 +2,8 @@ import sys
 import io
 import pathlib
 import importlib.abc
+import importlib.resources
+import importlib.util
 import tarfile
 import zipfile
 import marshal
