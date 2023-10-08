@@ -31,6 +31,17 @@ class script_class_type(type(godot.Object)):
 	def __hash__(cls):
 		return id(cls)
 
+	def __call__(cls, *args, **kwargs):
+		obj = cls.__new__(cls, *args, **kwargs)
+
+		obj.set_script(godot.ResourceLoader.load(cls._script_path))
+
+		if (res := obj.__init__(*args, **kwargs)) is not None:
+			raise TypeError(
+				f'__init__() should return None, not \'{type(res).__name__}\'')
+
+		return obj
+
 
 def set_script_class(obj: godot.Object, cls: type):
 	obj_base = _most_derived_non_script_base(type(obj))

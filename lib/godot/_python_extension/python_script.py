@@ -75,6 +75,7 @@ def _expose_script_class(cls_or_none: type | None = None, level=-1, **kwargs):
 	cls = cls_or_none
 
 	path = _get_caller_filename(level)
+	cls._script_path = path
 	_exposed[path] = cls
 
 	cls.__class__ = script_class_type.script_class_type

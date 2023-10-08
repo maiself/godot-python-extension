@@ -451,6 +451,17 @@ def _finalize_class(*args, skip_finalization: bool = False, **kwargs):
 	return _finalize_class_(*args, skip_finalization=skip_finalization, **kwargs)
 
 
+def _ensure_class_exposed(cls):
+	if (
+		getattr(cls, '_godot_class', None) # XXX
+		or getattr(cls, '_script_class', None) # XXX
+		or getattr(cls, '_extension_class', None) # XXX
+	):
+		return
+
+	raise RuntimeError(f'{cls!r} is not exposed') # TODO: support unexposed classes
+
+
 def get_method_info_from_method(method):
 	# get and prepare method function and its signature
 

@@ -34,6 +34,11 @@ class class_type(utils.metaclasses.reuse_type_object_meta, type(gde.Object)):
 		return _finalize_class
 
 	@cached_class_property
+	def __ensure_class_exposed(cls):
+		from .exposition import _ensure_class_exposed # XXX: cant import exposition from global scope
+		return _ensure_class_exposed
+
+	@cached_class_property
 	def __finalize_class_named_kwargs(cls):
 		return _get_named_kwargs(cls.__finalize_class)
 
@@ -50,4 +55,15 @@ class class_type(utils.metaclasses.reuse_type_object_meta, type(gde.Object)):
 
 		return cls
 
+	def __call__(cls, *args, **kwargs):
+		meta = type(cls)
+
+		# ensure the class is exposed (or is provided by godot)
+		meta.__ensure_class_exposed(cls)
+
+		if type(cls) is not meta:
+			# metaclass changed while exposing, call the correct `__call__`
+			return cls(*args, **kwargs)
+
+		return super().__call__(*args, **kwargs)
 

@@ -244,8 +244,8 @@ def bind_class(class_info):
 		@utils.swap_members
 		class Object(cls, skip_finalization=True):
 			def __new__(cls, *args, **kwargs):
-				inst = Object.__new__(cls, *args, **kwargs)
-				Object.__init__(inst)
+				inst = Object.__new__(cls, *args, **kwargs) # creates the object
+				Object.__init__(inst) # creates the c++ / python object association
 				return inst
 
 			def __init__(self, *args, **kwargs):
