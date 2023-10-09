@@ -8,6 +8,43 @@ from . import module_machinery
 from . import utils
 
 
+def _try_restart_headless_if_cli():
+	# XXX: is there a better way?
+	# this will likely work only for linux
+	# is there a better place to put this?
+
+	try:
+		args = pathlib.Path('/proc/self/cmdline').read_text().removesuffix('\00').split('\x00')
+
+		if '--headless' not in args:
+			import itertools
+			pairwise_args = itertools.pairwise(itertools.chain(args, (None,)))
+
+			args = []
+
+			for arg, next_arg in pairwise_args:
+				if arg == '--path':
+					# skip passing along path as cwd will have already been changed to it
+					next(pairwise_args)
+					path = next_arg
+
+				else:
+					args.append(arg)
+
+			for arg in args:
+				if arg.startswith('--python'):
+					# python cli option as specified, restart as headless
+					import os
+					os.execlp(args[0], args[0], '--quiet', '--headless', *args[1:])
+
+	except Exception as exc:
+		# if anything goes wrong then just continue
+		pass
+
+
+_try_restart_headless_if_cli()
+
+
 def _init():
 	sys.path.remove('') # XXX: current directory shouldnt be in path, check interpreter initialization
 	if any(path in sys.path for path in ('', '.', './')):

@@ -72,6 +72,10 @@ std::string format_exception(const Exception& exception, Notes&&... notes) {
 
 #define CATCH_EXCEPTIONS_AND_PRINT_ERRORS_THEN(then, ...) \
 	catch(const py::error_already_set& exception) { \
+		if(exception.matches(PyExc_SystemExit)) { \
+			py::object code = exception.value().attr("code"); \
+			std::quick_exit(code.is_none() ? 0 : code.cast<int>()); /* XXX: may skip cleanup */ \
+		} \
 		extension_interface::print_error(format_exception(exception __VA_OPT__(,) __VA_ARGS__).data(), \
 			__FUNCTION__, __FILE__, __LINE__, false); \
 		do { then } while(0); \

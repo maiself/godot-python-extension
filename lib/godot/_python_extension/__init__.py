@@ -10,6 +10,8 @@ from . import script_resource_format
 
 from . import godot_fs_importer
 
+from . import cli
+
 
 # create instances
 
@@ -23,6 +25,9 @@ godot.ResourceSaver.add_resource_format_saver(script_saver)
 
 
 godot_fs_importer.install()
+
+
+cli.main()
 
 
 @atexit.register
