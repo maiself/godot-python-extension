@@ -21,6 +21,8 @@ logger = logging.Logger('godot')
 
 _singleton_names = set(singleton.name for singleton in api.singletons)
 
+_Engine = None
+
 
 def initialize_module():
 	godot.__getattr__ = _module_getattr
@@ -75,6 +77,8 @@ def initialize_module():
 
 
 def _module_getattr(key):
+	global _singleton_names, _Engine
+
 	if class_info := api.classes.get(key):
 		logger.info(f'\033[94;1mbinding class {key}\033[0m')
 
@@ -84,12 +88,19 @@ def _module_getattr(key):
 			#print(''.join(utils.format_exception(exc)).removesuffix('\n'), file=sys.stderr) # XXX
 			raise# RuntimeError
 
+		if _Engine:
+			# XXX: it seems this is needed as available singletons may change
+			_singleton_names |= set(_Engine.get_singleton_list())
+
 		if key in _singleton_names:
 			res = gde.global_get_singleton(key)
 
 			if res is None:
 				raise RuntimeError(
 					f'failed to retrieve singleton {key!r}')
+
+			if key == 'Engine':
+				_Engine = res
 
 		setattr(godot, key, res)
 
