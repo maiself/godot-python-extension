@@ -33,5 +33,5 @@ android.release.arm64 = "res://bin/libgodot-python.android.template_release.arm6
 
 [icons]
 
-PythonScript = "res://python.svg"
+_PythonScript = "res://python-script.svg"
 
