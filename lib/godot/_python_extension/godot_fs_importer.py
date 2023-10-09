@@ -124,7 +124,7 @@ class GodotFileSystemModuleImporter(importlib.abc.MetaPathFinder, importlib.abc.
 			loader = loader, origin = origin, is_package = is_package)
 
 	def invalidate_caches(self):
-		__class___known_fullnames.clear()
+		__class__._known_fullnames.clear()
 
 
 GodotFileSystemModuleImporter = GodotFileSystemModuleImporter()

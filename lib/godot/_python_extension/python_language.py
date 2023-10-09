@@ -1,3 +1,6 @@
+import keyword
+import textwrap
+
 import godot
 
 from godot._internal.extension_classes import *
@@ -42,12 +45,11 @@ class PythonLanguage(godot.ScriptLanguageExtension):
 
 	@utils.dont_log_calls
 	def _get_reserved_words(self) -> list[str]:
-		import keyword
 		return keyword.kwlist + keyword.softkwlist
 
 	@utils.dont_log_calls
-	def _is_control_flow_keyword(self, keyword: str) -> bool:
-		return keyword in (
+	def _is_control_flow_keyword(self, keyword_: str) -> bool:
+		return keyword_ in (
 			'await',
 			'break',
 			'continue',
@@ -75,9 +77,24 @@ class PythonLanguage(godot.ScriptLanguageExtension):
 		return [f'{d} {d}' for d in ('"', "'", '"""', "'''")]
 
 	def _make_template(self, template: str, class_name: str, base_class_name: str) -> godot.Script:
-		global script # XXX
+		#global script # XXX: not sure why this was here, refcount issue?
+
 		script = PythonScript()
-		script.set_source_code(f'# test script\n\n# {class_name} : {base_class_name}')
+
+		# TODO: check namespace of base class in template below, will currently fail for non-builtin classes
+
+		script.set_source_code(textwrap.dedent(f'''
+			import godot
+
+			from godot.variant_types import *
+
+
+			@godot.expose_script_class
+			class {godot.String(class_name).to_pascal_case()}(godot.{base_class_name}):
+				pass
+
+		''').lstrip())
+
 		return script
 
 	def _get_built_in_templates(self, object: str) -> list[dict]:
@@ -114,7 +131,15 @@ class PythonLanguage(godot.ScriptLanguageExtension):
 		)
 
 	def _validate_path(self, path: str) -> str:
-		return '' # XXX ?
+		name = str(godot.String(path).get_file().get_basename())
+
+		if keyword.iskeyword(name):
+			return 'Class name can\'t be a reserved keyword.'
+
+		elif not name.isidentifier():
+			return 'Class name must be a valid identifier.'
+
+		return ''
 
 	def _create_script(self) -> godot.Object:
 		return PythonScript()
@@ -238,7 +263,6 @@ class PythonLanguage(godot.ScriptLanguageExtension):
 
 	def _get_global_class_name(self, path: str) -> dict:
 		res = godot.ResourceLoader.load(path)
-		print(res, res._get_global_name())
 
 		from .script_class_type import _most_derived_non_script_base # XXX
 

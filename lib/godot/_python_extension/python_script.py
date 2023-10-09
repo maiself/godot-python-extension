@@ -19,6 +19,7 @@ from . import script_class_type
 
 
 import sys
+import importlib
 import importlib.abc
 import re
 
@@ -137,6 +138,8 @@ class PythonScript(godot.ScriptExtension):
 		super().__init__(*args, **kwargs)
 
 		self._valid = False
+
+		self._source_changed = False
 
 		self._placeholder_fallback_enabled = False
 
@@ -258,6 +261,9 @@ class PythonScript(godot.ScriptExtension):
 		return self._source or ''
 
 	def _set_source_code(self, code: str) -> None:
+		if code == self._source:
+			return
+		self._source_changed = True
 		self._source = code
 		self._valid = True # XXX: where to do this?
 
@@ -273,14 +279,25 @@ class PythonScript(godot.ScriptExtension):
 	def _reload(self, keep_state: bool = False) -> godot.Error:
 		self._valid = False
 
+		self._source_changed = True
+
 		if not self._path:
 			return godot.Error.FAILED
 
-		import importlib
+		# invalidate caches so any new files needed for reloading are picked up by the import system
+		importlib.invalidate_caches()
+
+		# the class object will be reused, so removed all exposed members so there is no remnants
+		if _class := self.__dict__.get('_class'): # XXX: handle all classes in a module
+			class_info = godot.exposition.get_class_info(_class)
+			for member_name in class_info.members.keys():
+				delattr(_class, member_name)
+
 
 		module_name = utils.godot_path_to_python_module_name(self._path)
 		module_name = module_name.removesuffix('.__init__') # XXX
 
+		# import or reload the module
 		try:
 			with utils.print_exceptions_and_reraise():
 				# XXX: dependant scripts?
@@ -292,6 +309,7 @@ class PythonScript(godot.ScriptExtension):
 		except Exception:
 			return godot.Error.FAILED
 
+		# get the exposed class
 		_class = _exposed.get(self._path)
 
 		if _class is None:
@@ -309,6 +327,9 @@ class PythonScript(godot.ScriptExtension):
 		return godot.Error.OK
 
 	def _get_documentation(self) -> list[dict]:
+		if not self._valid:
+			return []
+
 		class_info = godot.exposition.get_class_info(self._class)
 
 		from godot._internal import type_info
@@ -452,6 +473,10 @@ class PythonScript(godot.ScriptExtension):
 		]
 
 	def _has_method(self, method: str) -> bool:
+		return False
+		raise NotImplementedError
+
+	def _has_static_method(self, method: str) -> bool:
 		return False
 		raise NotImplementedError
 
