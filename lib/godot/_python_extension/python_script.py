@@ -109,6 +109,7 @@ godot.expose_script_class = expose_script_class # XXX
 
 
 
+_Placeholder = int
 
 #@bind_all_methods
 @register_extension_class
@@ -141,6 +142,8 @@ class PythonScript(godot.ScriptExtension):
 
 		self._source_changed = False
 
+		self._placeholders: dict[_Placeholder, godot.Object] = {}
+
 		self._placeholder_fallback_enabled = False
 
 		self._source = None
@@ -163,8 +166,8 @@ class PythonScript(godot.ScriptExtension):
 	def _editor_can_reload_from_file(self) -> bool:
 		return False
 
-	def _placeholder_erased(self, placeholder: object) -> None:
-		raise NotImplementedError
+	def _placeholder_erased(self, placeholder: _Placeholder) -> None:
+		del self._placeholders[placeholder]
 
 	def _can_instantiate(self) -> bool:
 		if not self._valid:
@@ -243,13 +246,46 @@ class PythonScript(godot.ScriptExtension):
 
 	def _placeholder_instance_create(self, for_object: godot.Object) -> object:
 		placeholder = gde.placeholder_script_instance_create(self._get_language(), self, for_object)
+		self._placeholders[placeholder] = weakref.ref(for_object)
 
-		gde.placeholder_script_instance_update(placeholder, self._get_script_property_list(), {'speed': 250}) # XXX
+		self.__update_placeholders([placeholder])
 
 		return placeholder
 
-		return self._instance_create(for_object)
-		raise NotImplementedError
+	def __update_placeholders(self, placeholders: collections.abc.Sequence[_Placeholder]):
+		if not self._class:
+			return
+
+		class_info = godot.exposition.get_class_info(self._class)
+
+		script_prop_list = self._get_script_property_list()
+		script_prop_names = [prop.get('name') for prop in script_prop_list if prop.get('name')]
+
+		default_values = {prop.name: prop._get_default_value() for prop in class_info.properties.values()}
+
+		for placeholder in placeholders:
+			updated_prop_list_for_obj = script_prop_list
+
+			# try to get strong ref to placeholder obj
+			if (obj := self._placeholders[placeholder]()) is not None:
+				# get properties the object has but script doesn't
+				obj_unique_props = [prop for prop in obj.get_property_list()
+					if prop.get('name') and prop.get('name') not in script_prop_names]
+
+				if obj_unique_props:
+					# copy and update the object unique properties to have no usage
+					# this will cause the property to continue to exist but not show in editor or be saved
+					# if the property is added back to the script the objects property value will be restored
+					obj_unique_props = [
+							{**prop, 'usage': godot.PropertyUsageFlags.PROPERTY_USAGE_NONE}
+							for prop in obj_unique_props
+						]
+
+					# combine object and script properties
+					updated_prop_list_for_obj = [*obj_unique_props, *script_prop_list]
+
+			# update the placeholder
+			gde.placeholder_script_instance_update(placeholder, updated_prop_list_for_obj, default_values)
 
 	def _instance_has(self, object: godot.Object) -> bool:
 		raise NotImplementedError
@@ -323,6 +359,8 @@ class PythonScript(godot.ScriptExtension):
 		for inst in set(self._instances):
 			with utils.print_exceptions_and_continue():
 				script_class_type.set_script_class(inst, _class)
+
+		self._update_exports() # XXX: should this be here?
 
 		return godot.Error.OK
 
@@ -431,8 +469,11 @@ class PythonScript(godot.ScriptExtension):
 		def _get_prop_comment(prop):
 			tree = ast.parse(self._source)
 			line_index = DefinitionFinder.find(f'{self._get_global_name()}.{prop.name}', tree = tree)
+			if line_index is None:
+				return None
+
 			defs = DefinitionFinder.find(tree = tree)
-			print(defs)
+
 			line = self._source.splitlines()[line_index - 2]
 
 			if line.strip().startswith('##'):
@@ -446,7 +487,7 @@ class PythonScript(godot.ScriptExtension):
 				name = self._get_global_name() or f'"{self._path.removeprefix("res://")}"',
 				is_script_doc = True,
 				script_path = f'"{self._path.removeprefix("res://")}"',
-				inherits = 'Node2D',
+				inherits = self._get_instance_base_type(), # XXX
 				brief_description = brief_docs,
 				description = docs,
 				methods = [
@@ -512,17 +553,29 @@ class PythonScript(godot.ScriptExtension):
 		#raise NotImplementedError
 
 	@utils.dont_log_calls
-	def _has_property_default_value(self, property: str) -> bool:
+	def _has_property_default_value(self, property_: str) -> bool:
+		class_info = godot.exposition.get_class_info(self._class)
+
+		if prop := class_info.properties.get(property_):
+			return prop._has_default_value()
+
 		return False
-		raise NotImplementedError
 
 	@utils.dont_log_calls
-	def _get_property_default_value(self, property: str) -> godot.Variant:
+	def _get_property_default_value(self, property_: str) -> godot.Variant:
+		class_info = godot.exposition.get_class_info(self._class)
+
+		if prop := class_info.properties.get(property_):
+			return prop._get_default_value()
+
 		return None
-		raise NotImplementedError
 
 	def _update_exports(self) -> None:
-		pass#raise NotImplementedError
+		if not self._source_changed:
+			return
+
+		self._source_changed = False
+		self.__update_placeholders(self._placeholders)
 
 	def _get_script_method_list(self) -> list[dict]:
 		return []
@@ -546,7 +599,8 @@ class PythonScript(godot.ScriptExtension):
 			usage = godot.PROPERTY_USAGE_NO_EDITOR | godot.PROPERTY_USAGE_INTERNAL,
 		)
 
-		return [script_source_prop, script_source_prop2] + [prop.as_dict() for prop in class_info.properties.values()]
+		res = [script_source_prop] + [prop.as_dict() for prop in class_info.properties.values()]
+		return res
 
 	def _get_member_line(self, member: str) -> int:
 		raise NotImplementedError
