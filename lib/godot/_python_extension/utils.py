@@ -32,7 +32,12 @@ def log_calls(func, cls=None):
 			#if isinstance(args[0], cls):
 			#	prefix = fa(args[0]) + '.'
 
-			a = (fa(arg) for arg in (args[1:] if isinstance(cls, type) and isinstance(args[0], cls) else args))
+			if isinstance(cls, type) and isinstance(args[0], cls):
+				self_arg = f'\033[34m{fa(args[0])}\033[35m'
+				a = (self_arg, *(fa(arg) for arg in args[1:]))
+			else:
+				a = (fa(arg) for arg in args)
+
 			kw = (f'{name} = {fa(val)}' for name, val in kwargs.items())
 			a = (*a, *kw)
 
@@ -182,11 +187,16 @@ def log_method_calls(cls):
 		#print(cls.__name__+'.'+name, getattr(cls.__mro__[1], name).__doc__)
 		#print(getattr(cls.__mro__[1], name))
 
-		if hasattr(obj, '__wrapped__'):
-			obj.__wrapped__ = log_calls(obj.__wrapped__, cls)
+		with exception_note(f'while decorating {obj} for logging'):
+			if hasattr(obj, '__wrapped__'):
+				try:
+					functools.update_wrapper(obj, log_calls(obj.__wrapped__, cls))
+				except AttributeError:
+					obj = type(obj)(log_calls(obj.__wrapped__, cls))
+				#obj.__wrapped__ = log_calls(obj.__wrapped__, cls)
 
-		else:
-			setattr(cls, name, log_calls(obj, cls))
+			else:
+				setattr(cls, name, log_calls(obj, cls))
 
 	return cls
 
