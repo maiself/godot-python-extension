@@ -6,22 +6,10 @@ namespace pygodot {
 
 
 void func_to_callable(GDExtensionUninitializedTypePtr ptr, py::function func) {
-	static GDExtensionObjectPtr object = nullptr; // XXX
-
-	if(!object) {
-		// XXX: godot is currently requiring an object for callables
-		// see: https://github.com/godotengine/godot/issues/81887
-		object = extension_interface::classdb_construct_object(StringName("Object"));
-
-		register_cleanup_func([]() {
-			extension_interface::object_destroy(object);
-		});
-	}
-
 	GDExtensionCallableCustomInfo info = {
 		.callable_userdata = func.ptr(),
 		.token = extension_interface::token,
-		.object = object, // XXX
+		.object = nullptr,
 
 		.call_func = [](void* userdata, const GDExtensionConstVariantPtr* args,
 			GDExtensionInt argument_count, GDExtensionVariantPtr res, GDExtensionCallError* error)
