@@ -244,10 +244,11 @@ class property(builtins.property, exposed_member):
 		#if self.name is unspecified:
 		#	self.name = str(godot.String.capitalize(name)) # XXX: do this elsewhere?
 
-		prop_info = TypeInfo.from_resolved_annotation(cls, name).property_info
+		type_info = TypeInfo.from_resolved_annotation(cls, name)
+		prop_info = type_info.property_info
 
 		self._prop_name = sys.intern(f'__{cls.__qualname__.replace(".", "_")}_{name}')
-		self._prop_type = prop_info.python_type
+		self._prop_type = type_info.type_object
 
 		set_attr_if_unspecified(self, 'type', from_object = prop_info)
 		set_attr_if_unspecified(self, 'name', from_value = name)
@@ -278,20 +279,24 @@ class property(builtins.property, exposed_member):
 
 		return self
 
+	def _has_default_value(self) -> bool:
+		return (self.default is not unspecified or self.default_factory is not unspecified)
+
+	def _get_default_value(self):
+		if self.default is not unspecified:
+			return self.default
+
+		elif self.default_factory is not unspecified:
+			return self.default_factory()
+
+		else:
+			return self._prop_type()
+
 	def	_get_value(self, inst):
 		value = getattr(inst, self._prop_name, self.__uninitialized_property)
 
 		if value is self.__uninitialized_property:
-			if self.default is not unspecified:
-				value = self.default
-
-			elif self.default_factory is not unspecified:
-				value = self.default_factory()
-
-			else:
-				value = self._prop_type()
-
-
+			value = self._get_default_value()
 			self._set_value(inst, value)
 
 		return value
