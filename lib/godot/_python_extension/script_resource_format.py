@@ -69,8 +69,9 @@ class PythonScriptSaver(godot.ResourceFormatSaver):
 
 		source = resource._source#_code # XXX
 
-		#pathlib.Path(path.removeprefix('res://')).write_text(source)
-		godot.FileAccess.open(path, godot.FileAccess.ModeFlags.WRITE).store_string(source)
+		file = godot.FileAccess.open(path, godot.FileAccess.ModeFlags.WRITE)
+		file.store_string(source)
+		file.close()
 
 		#if godot.ScriptServer.is_reload_scripts_on_save_enabled(): # XXX: not exposed
 		PythonLanguage.get()._reload_tool_script(resource, True)
