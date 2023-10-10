@@ -1,0 +1,89 @@
+name: Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      python-version:
+        type: choice
+        required: true
+        default: '3.12'
+        options:
+        - 3.12
+
+jobs:
+  linux-build:
+    name: Linux build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '${{ inputs.python-version }}'
+
+      - name: Setup SCons
+        shell: bash
+        run: |
+          python -c 'import sys; print(sys.version)'
+          python -m pip install scons==4.4.0
+          scons --version
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Build extension
+        run: |
+          scons platform=linux single_source=true
+
+      # archive to preserve execute permission on library files
+      - name: Create archive
+        run: |
+          cd bin/
+          zip -q -r ../godot-python-linux-x86_64.zip *
+          cd ../
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: godot-python-linux-x86_64
+          path: godot-python*.zip
+          retention-days: 30
+
+
+  windows-build:
+    name: Windows build
+    runs-on: windows-latest
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '${{ inputs.python-version }}'
+
+      - name: Setup SCons
+        shell: bash
+        run: |
+          python -c 'import sys; print(sys.version)'
+          python -m pip install scons==4.4.0
+          scons --version
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Build extension
+        run: |
+          scons platform=windows single_source=true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: godot-python-windows-x86_64
+          # everything under bin/ but exclude unneeded files that get generated for some reason
+          path: |
+            bin/**/*
+            !bin/**/*.lib
+            !bin/**/*.exp
+          retention-days: 30
+
