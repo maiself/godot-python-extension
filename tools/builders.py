@@ -17,7 +17,7 @@ def make_extract_api_action(target, source, env):
 
 	if not env.get('skip_extract_api_files'):
 		godot = build_utils.get_executable_path('godot', env)
-		subprocess.run([godot, '--headless', '--dump-gdextension-interface', '--dump-extension-api'], cwd=extern_gde, check=True)
+		subprocess.run([godot, '--headless', '--dump-gdextension-interface', '--dump-extension-api-with-docs'], cwd=extern_gde, check=True)
 
 	shutil.copy2(extern_gde / 'extension_api.json', api_info)
 

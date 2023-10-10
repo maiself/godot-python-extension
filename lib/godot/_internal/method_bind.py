@@ -9,6 +9,7 @@ import _gdextension as gde
 import godot
 
 from . import utils
+from .utils import doc_utils
 
 from .utils import apply_attrs
 
@@ -233,6 +234,9 @@ def bind_method(cls, type_info, method_info, with_docs=True):
 			#method.__doc__ = f'godot {type_info.name} method'
 			#method.__text_signature__ = f'''{method_info.name}({', '.join(arg_docs)}){ret_doc}'''
 			#method.__signature__ = None
+
+		if docs := method_info.get('documentation'):
+			method.__doc__ = doc_utils.reformat_doc_bbcode(docs)
 
 	setattr(cls, method_info.name, method)
 
