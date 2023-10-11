@@ -194,11 +194,10 @@ class PythonScript(godot.ScriptExtension):
 		return ''
 		#raise NotImplementedError
 
-
 	def _get_icon_path(self): # XXX: not inherited
 		try:
 			params = getattr(self._class, '_expose_params', {})
-			return params.get('icon', '')
+			return params.get('icon') or ''
 		except Exception:
 			return '' # XXX
 		return ''
@@ -327,7 +326,10 @@ class PythonScript(godot.ScriptExtension):
 		if _class := self.__dict__.get('_class'): # XXX: handle all classes in a module
 			class_info = godot.exposition.get_class_info(_class)
 			for member_name in class_info.members.keys():
-				delattr(_class, member_name)
+				try:
+					delattr(_class, member_name)
+				except AttributeError:
+					pass
 
 
 		module_name = utils.godot_path_to_python_module_name(self._path)
@@ -584,23 +586,42 @@ class PythonScript(godot.ScriptExtension):
 	def _get_script_property_list(self) -> list[dict]:
 		class_info = godot.exposition.get_class_info(self._class)
 
-		script_source_prop = dict(
+		props = []
+
+		# script category
+		props.append(dict(
 			type = godot.Variant.Type.TYPE_NIL,
 			name = godot.String(self.resource_path).get_file() if not self.resource_name else self.resource_name,
 			hint = godot.PROPERTY_HINT_NONE,
 			hint_string = self.resource_path,
 			usage = godot.PROPERTY_USAGE_CATEGORY,
-		)
+		))
 
+		# properties and property groups
+		for member in class_info.members.values():
+			match member:
+				case godot.property():
+					props.append(member.as_dict())
 
-		script_source_prop2 = dict(
-			type = godot.Variant.Type.TYPE_STRING,
-			name = 'script/source',
-			usage = godot.PROPERTY_USAGE_NO_EDITOR | godot.PROPERTY_USAGE_INTERNAL,
-		)
+				case godot.property_subgroup():
+					props.append(dict(
+						type = godot.Variant.Type.TYPE_NIL,
+						name = member.name,
+						hint = godot.PROPERTY_HINT_NONE,
+						hint_string = member.prefix,
+						usage = godot.PROPERTY_USAGE_SUBGROUP,
+					))
 
-		res = [script_source_prop] + [prop.as_dict() for prop in class_info.properties.values()]
-		return res
+				case godot.property_group():
+					props.append(dict(
+						type = godot.Variant.Type.TYPE_NIL,
+						name = member.name,
+						hint = godot.PROPERTY_HINT_NONE,
+						hint_string = member.prefix,
+						usage = godot.PROPERTY_USAGE_GROUP,
+					))
+
+		return props
 
 	def _get_member_line(self, member: str) -> int:
 		raise NotImplementedError

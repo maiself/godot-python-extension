@@ -169,9 +169,11 @@ class PythonLanguage(godot.ScriptLanguageExtension):
 		return False
 
 	def _complete_code(self, code: str, path: str, owner: godot.Object) -> dict:
+		return {}
 		raise NotImplementedError
 
 	def _lookup_code(self, code: str, symbol: str, path: str, owner: godot.Object) -> dict:
+		return {}
 		raise NotImplementedError
 
 	def _auto_indent_code(self, code: str, from_line: int, to_line: int) -> str:
