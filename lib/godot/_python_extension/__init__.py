@@ -27,6 +27,14 @@ godot.ResourceSaver.add_resource_format_saver(script_saver)
 godot_fs_importer.install()
 
 
+def _install_module_utils():
+	from . import module_utils
+	for name in module_utils.__all__:
+		setattr(godot, name, getattr(module_utils, name))
+
+_install_module_utils()
+
+
 cli.main()
 
 
