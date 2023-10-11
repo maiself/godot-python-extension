@@ -1,13 +1,20 @@
-[gd_scene load_steps=3 format=3 uid="uid://bb1vg4r4xnu6j"]
+[gd_scene load_steps=4 format=3 uid="uid://bb1vg4r4xnu6j"]
 
 [ext_resource type="Texture2D" uid="uid://cswr8vy4lt7dt" path="res://icon.png" id="1_5fqho"]
 [ext_resource type="Script" path="res://script_test/sprite.py" id="2_qhit4"]
+[ext_resource type="Script" path="res://script_test/spawner.py" id="3_qhit5"]
 
 [node name="main" type="Node2D"]
 
+[node name="Spawner" type="Node" parent="."]
+script = ExtResource("3_qhit5")
+spawn_count = 50
+spawn_color = Color(1, 0.25098, 0.25098, 0.752941)
+spawn_color_hue_randomness = 0.25
+
 [node name="Icon" type="Sprite2D" parent="."]
-position = Vector2(154, 143)
+z_index = 1
+position = Vector2(379, 234)
 texture = ExtResource("1_5fqho")
 script = ExtResource("2_qhit4")
-script/source = null
 speed = 253.43

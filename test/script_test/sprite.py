@@ -7,7 +7,7 @@ from godot import Input, InputEventKey
 
 
 @godot.expose_script_class(as_global=True)
-class TestSprite(godot.Node2D, expose_all_methods=True):
+class TestSprite(godot.Sprite2D, expose_all_methods=True):
 	'''Simple class to test Python script support.
 
 	Implements a simple movable sprite.'''
@@ -15,15 +15,21 @@ class TestSprite(godot.Node2D, expose_all_methods=True):
 	## The speed of the sprite when moving
 	speed: float = godot.property(default = 250.0)
 
+	_input_rotation: float = godot.property(default = 0.0,
+		usage = godot.PropertyUsageFlags.PROPERTY_USAGE_NO_EDITOR)
+
 	def _process(self, delta: float):
 		'''Move sprite based of speed and arrow key input.'''
 
 		speed_modifier = (2.0 if Input.is_key_pressed(KEY_SHIFT) else 1.0)
 
-		self.global_position += Vector2(
+		self.global_position += (
+			Vector2(
 				Input.get_axis('ui_left', 'ui_right'),
 				Input.get_axis('ui_up', 'ui_down')
-			) * self.speed * speed_modifier * delta
+			).rotated(godot.deg_to_rad(self._input_rotation))
+			* self.speed * speed_modifier * delta
+		)
 
 	def _input(self, event):
 		self.check_input(event)
