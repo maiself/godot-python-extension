@@ -107,17 +107,21 @@ class GodotFileSystemModuleImporter(importlib.abc.MetaPathFinder, importlib.abc.
 			optimize = -1) # XXX
 
 	def is_package(self, fullname):
-		if filename := self._get_filename(fullname):
-			return filename.endswith('/')
+		if (filename := self._get_filename(fullname)) is None:
+			raise ImportError
 
-		raise ImportError
+		return (
+			filename.endswith('/')
+			or filename.endswith('/__init__.py')
+			or filename.endswith('/__init__.pyc')
+		)
 
 	def find_spec(self, fullname, path, target=None):
 		if (filename := self._get_filename(fullname)) is None:
 			return None
 
-		is_package = filename.endswith('/')
-		loader = self if not is_package else None
+		is_package = self.is_package(fullname)
+		loader = self if not filename.endswith('/') else None
 		origin = filename
 
 		return importlib.util.spec_from_loader(fullname,

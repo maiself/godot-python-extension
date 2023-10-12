@@ -235,13 +235,12 @@ python_sources = []
 
 sources.extend(pathlib.Path('src').glob('**/*.cpp'))
 
-python_sources.extend(pathlib.Path('lib').glob('**/*.py'))
-python_sources.extend(pathlib.Path('lib').glob('**/*.pyc'))
-python_sources.append('lib/godot/_internal/extension_api.json')
+for ext in ('py', 'pyc', 'json', 'svg', 'md'):
+	python_sources.extend(pathlib.Path('lib').glob(f'**/*.{ext}'))
 
 # filter
 sources = [os.fspath(path) for path in sources if '.generated' not in path.parts]
-python_sources = [os.fspath(path) for path in python_sources]
+python_sources = [os.fspath(path) for path in sorted(python_sources)]
 
 # add back after filtering
 sources.append(os.fspath(generated_path / 'godot_module_archive.cpp'))

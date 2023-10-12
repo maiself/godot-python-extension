@@ -1,4 +1,5 @@
 import sys
+import os
 import io
 import pathlib
 import importlib.abc
@@ -15,7 +16,44 @@ import marshal
 # available to use here.
 
 
+def _log_method_calls(cls):
+	if not os.environ.get('GODOT_PYTHON_DEBUG_ARCHIVE_IMPORTER'):
+		return cls
+
+	limited_repr = lambda x, limit=1024: repr(x)[:1024]
+
+	def log_call(func):
+		def wrapper(*args, **kwargs):
+			repr_args = ', '.join(
+					[limited_repr(arg) for arg in args]
+					+ [f'{name} = {limited_repr(value)}' for name, value in kwargs.items()]
+				)
+			repr_call = f'{func.__qualname__}({repr_args})'
+
+			print(repr_call)
+
+			try:
+				res = func(*args, **kwargs)
+
+			except Exception as exc:
+				print(f'\033[2m{repr_call}\033[0m -> {exc}')
+				raise
+
+			print(f'\033[2m{repr_call}\033[0m -> {limited_repr(res)}')
+
+			return res
+
+		return wrapper
+
+	for name, value in vars(cls).items():
+		if callable(value) and not name.startswith('__'):
+			setattr(cls, name, log_call(value))
+
+	return cls
+
+
 # XXX: split class?
+@_log_method_calls
 class ArchiveTraversable(importlib.resources.abc.Traversable, importlib.resources.abc.ResourceReader):
 	def __init__(self, archive, path):
 		self._archive = archive
@@ -38,7 +76,7 @@ class ArchiveTraversable(importlib.resources.abc.Traversable, importlib.resource
 
 	def iterdir(self):
 		return (type(self)(self._archive, path)
-			for path in self._archive._archive_names if path.startswith(self._path))
+			for path in self._archive._archive_names if path.startswith(self._path) and path != self._path)
 
 	def is_dir(self):
 		return self._path == '' or self._path.endswith('/')
@@ -57,8 +95,13 @@ class ArchiveTraversable(importlib.resources.abc.Traversable, importlib.resource
 
 		return type(self)(self._archive, path)
 
-	def open(self, mode='r'):
-		return io.BytesIO(self._archive.get_data(self._path))
+	def open(self, mode='r', *args, **kwargs):
+		bytes_io = io.BytesIO(self._archive.get_data(self._path))
+		match mode:
+			case 'r':
+				return io.TextIOWrapper(bytes_io, *args, **kwargs)
+			case 'rb':
+				return bytes_io
 
 	# importlib.resources.abc.ResourceReader
 
@@ -80,7 +123,11 @@ class ArchiveTraversable(importlib.resources.abc.Traversable, importlib.resource
 	def contents(self):
 		return (child.name for child in self.iterdir())
 
+	def files(self):
+		return self
 
+
+@_log_method_calls
 class ArchiveImporter(importlib.abc.MetaPathFinder, importlib.abc.FileLoader,
 		importlib.resources.abc.TraversableResources):
 	def __init__(self, archive: tarfile.TarFile | zipfile.ZipFile | bytes | str | pathlib.Path, *,
@@ -92,7 +139,10 @@ class ArchiveImporter(importlib.abc.MetaPathFinder, importlib.abc.FileLoader,
 		if self._name is None and isinstance(self._archive, (str, pathlib.Path)):
 			self._name = str(self._archive)
 
-		archive_names = self._prepare_archive()
+		archive_names = set(self._prepare_archive())
+		dirs = set((file.rsplit('/', 1)[0] + '/' for file in archive_names if '/' in file))
+		archive_names = sorted(archive_names | dirs)
+
 		self._archive_names = archive_names
 
 		self._fullnames = {}
