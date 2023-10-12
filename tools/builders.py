@@ -78,7 +78,7 @@ def _patch_gdextension_interface_header(src: pathlib.Path, dest: pathlib.Path):
 			case _:
 				return match_[0]
 
-	code = re.sub('typedef\s+.+?\(\*GDExtension(?P<func>\w+?)\)\((?P<params>.+?)\);', replace_func_typedef, code)
+	code = re.sub(r'typedef\s+.+?\(\*GDExtension(?P<func>\w+?)\)\((?P<params>.+?)\);', replace_func_typedef, code)
 
 	# write dest
 	dest.write_text(code)
