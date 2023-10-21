@@ -10,15 +10,12 @@ from . import utils
 
 def _try_restart_headless_if_cli():
 	# XXX: is there a better way?
-	# this will likely work only for linux
 	# is there a better place to put this?
 
 	try:
-		args = pathlib.Path('/proc/self/cmdline').read_text().removesuffix('\00').split('\x00')
-
-		if '--headless' not in args:
+		if '--headless' not in sys.argv:
 			import itertools
-			pairwise_args = itertools.pairwise(itertools.chain(args, (None,)))
+			pairwise_args = itertools.pairwise(itertools.chain(sys.argv, (None,)))
 
 			args = []
 
@@ -46,7 +43,7 @@ _try_restart_headless_if_cli()
 
 
 def _init():
-	sys.path.remove('') # XXX: current directory shouldnt be in path, check interpreter initialization
+	#sys.path.remove('') # XXX: current directory shouldnt be in path, check interpreter initialization
 	if any(path in sys.path for path in ('', '.', './')):
 		raise RuntimeError(f'current directory found in sys.path')
 

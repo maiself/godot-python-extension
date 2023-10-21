@@ -1,4 +1,5 @@
 import sys
+import os
 import signal
 import time
 import itertools
@@ -84,11 +85,23 @@ def _repl():
 	sys.modules['__main__'] = __main__
 
 	import code
-	import readline
-	import rlcompleter
 
-	readline.parse_and_bind('tab: complete')
-	readline.set_completer(rlcompleter.Completer(__main__).complete)
+	try:
+		if 'TERMINFO_DIRS' not in os.environ:
+			os.environ['TERMINFO_DIRS'] = '/etc/terminfo:/lib/terminfo:/usr/share/terminfo'
+
+		import readline
+		import rlcompleter
+
+		if 'libedit' in readline.__doc__:
+			readline.parse_and_bind('python:bind ^I rl_complete')
+		else:
+			readline.parse_and_bind('tab: complete')
+
+		readline.set_completer(rlcompleter.Completer(__main__).complete)
+
+	except ImportError:
+		pass
 
 	banner = textwrap.dedent(f'''
 		Python {sys.version} on {sys.platform}
@@ -114,14 +127,21 @@ def _command(command_code):
 @_python_command
 def _script(script_path):
 	'''Execute the script at located SCRIPT_PATH as `__main__`.'''
-	raise NotImplementedError # TODO
+	with open(script_path, 'r') as file:
+		source = file.read()
+
+	ns = dict(
+		__file__ = script_path
+	)
+	exec(source, ns)
+	sys.exit()
 
 
 def _parse_args() -> tuple[list, dict]:
 	args = []
 	kwargs = {}
 
-	pairwise_args = itertools.pairwise(itertools.chain(godot.OS.get_cmdline_args(), (None,)))
+	pairwise_args = itertools.pairwise(itertools.chain(sys.argv, (None,)))
 
 	for arg, next_arg in pairwise_args:
 		if arg.startswith('--'):
@@ -168,9 +188,6 @@ def _try_run_python_command():
 
 
 def main():
-	# XXX: ensure sys.argv is set elsewhere
-	sys.argv[1:] = [str(arg) for arg in godot.OS.get_cmdline_user_args()]
-
 	_try_run_python_command()
 
 	_install_signal_handlers()

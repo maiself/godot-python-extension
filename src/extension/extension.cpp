@@ -3,17 +3,13 @@
 #include <cstdio>
 #include <cstring>
 
-#ifdef UNIX_ENABLED
-#include <dlfcn.h>
-#endif
-
 #include <pybind11/embed.h>
-
 
 #include "extension/extension.h"
 #include "util/exceptions.h"
 #include "util/system.h"
 #include "variant/string.h"
+#include "variant/string_name.h"
 
 
 namespace pygodot {
@@ -33,6 +29,147 @@ static std::vector<std::function<void()>> cleanup_functions;
 
 void register_cleanup_func(std::function<void()> func) {
 	cleanup_functions.push_back(func);
+}
+
+
+static struct runtime_config_t {
+	std::filesystem::path executable_path;
+
+	std::string program_name;
+	std::vector<std::string> argv;
+
+	std::filesystem::path project_path;
+
+	std::filesystem::path library_path;
+	std::filesystem::path lib_dir_path;
+
+	void init() {
+		// `executable_path`, `program_name` and `argv`
+		executable_path = get_executable_path();
+
+		program_name = (executable_path.is_absolute()
+				? "." / std::filesystem::relative(executable_path)
+				: executable_path
+			).string();
+
+		argv = get_argv();
+
+		// `project_path`
+		project_path = std::filesystem::current_path();
+
+		// see if `--path` was specified to godot
+		for(int i = 1; i < static_cast<int>(argv.size()) - 1; i++) {
+			if(argv[i] == "--") {
+				break;
+			}
+			if(argv[i] == "--path" && argv[i+1][0] != '-') {
+				project_path = std::filesystem::path(argv[i+1]);
+				if(!project_path.is_absolute()) {
+					project_path = std::filesystem::current_path() / project_path;
+				}
+				break;
+			}
+		}
+
+		// `library_path`
+		{
+			// get the library path as specified in the `.gdextension` file
+			String library_res_path{uninitialized};
+			extension_interface::get_library_path(extension_interface::library, uninitialized(library_res_path));
+
+			// convert from a `res://` path to real path
+			library_path = project_path
+				/ std::filesystem::path(std::string(library_res_path).data() + strlen("res://"));
+		}
+
+		if(!std::filesystem::exists(project_path / ".godot") || !std::filesystem::exists(library_path)) {
+			// not running from the editor, likely a template build with the library next to the executable
+			library_path = project_path / library_path.filename();
+		}
+
+		if(!std::filesystem::exists(library_path)) {
+			library_path = executable_path.parent_path() / library_path.filename();
+		}
+
+		// `lib_dir_path`
+		lib_dir_path = library_path.parent_path();
+	};
+} runtime_config;
+
+
+static bool init_python_isolated() {
+#ifdef UNIX_ENABLED
+	if(!promote_lib_to_global(PYTHON_LIBRARY_PATH)) {
+		throw std::runtime_error("failed to promote lib \"" PYTHON_LIBRARY_PATH "\" to global");
+	}
+#endif
+
+	if(Py_IsInitialized()) {
+		throw std::runtime_error("python already initialized");
+	}
+
+	// gather paths
+	runtime_config.init();
+
+	// init python
+
+	PyStatus status;
+
+	auto check_status = [&](const std::string& what) {
+		if(PyStatus_Exception(status)) {
+			throw std::runtime_error(what + " failed: " + (status.err_msg ? status.err_msg : ""));
+		}
+	};
+
+	PyPreConfig preconfig;
+	PyPreConfig_InitIsolatedConfig(&preconfig);
+
+	preconfig.utf8_mode = 1;
+
+	status = Py_PreInitialize(&preconfig);
+	check_status("python preinitialization");
+
+	PyConfig config;
+	PyConfig_InitIsolatedConfig(&config);
+
+	config.parse_argv = 0;
+	config.write_bytecode = 0;
+
+	auto set_string = [&](auto& config_str, const std::string& name, const std::string& value) {
+		status = PyConfig_SetBytesString(&config, &config_str, value.data());
+		check_status("python initialization, setting " + name);
+	};
+
+	set_string(config.home, "home", runtime_config.lib_dir_path.string());
+	set_string(config.base_exec_prefix, "base_exec_prefix", runtime_config.lib_dir_path.string());
+	set_string(config.base_executable, "base_executable", runtime_config.executable_path.string());
+	set_string(config.base_prefix, "base_prefix", runtime_config.lib_dir_path.string());
+	set_string(config.exec_prefix, "exec_prefix", runtime_config.lib_dir_path.string());
+	set_string(config.executable, "executable", runtime_config.executable_path.string());
+	set_string(config.prefix, "prefix", runtime_config.lib_dir_path.string());
+
+	set_string(config.program_name, "program_name", runtime_config.program_name);
+
+	// TODO: enable common module search paths next to the extension
+	//set_string(config.platlibdir, "platlibdir", ".");
+	//config.module_search_paths_set = 1;
+
+	if(runtime_config.argv.size()) {
+		std::vector<char*> arg_ptrs;
+		for(auto& arg : runtime_config.argv) {
+			arg_ptrs.push_back(arg.data());
+		}
+
+		status = PyConfig_SetBytesArgv(&config, runtime_config.argv.size(), arg_ptrs.data());
+		check_status("python initialization, setting argv");
+	}
+
+	status = Py_InitializeFromConfig(&config);
+	check_status("python initialization");
+
+	PyConfig_Clear(&config);
+
+	return true;
 }
 
 
@@ -65,23 +202,22 @@ static bool _init_godot_module() {
 
 void initialize_python_module(void* userdata, GDExtensionInitializationLevel level) {
 	if(level == GDEXTENSION_INITIALIZATION_CORE) {
-#ifdef UNIX_ENABLED
-		promote_lib_to_global(PYTHON_LIBRARY_PATH);
-#endif
+		try {
+			//printf("initializing interpreter...\n");
 
-		//printf("initializing interpreter...\n");
+			init_python_isolated();
 
-		py::initialize_interpreter();
+			//printf("interpreter initialized\n");
 
-		//printf("interpreter initialized\n");
-
-		released_gil = std::make_unique<py::gil_scoped_release>();
+			released_gil = std::make_unique<py::gil_scoped_release>();
+		}
+		CATCH_FATAL_EXCEPTIONS_PRINT_ERRORS_AND_ABORT("During godot python module initialization")
 
 		py::gil_scoped_acquire gil;
 
-		initialization_level = level;
-
 		try {
+			initialization_level = level;
+
 			const char* lib_dir = std::getenv("GODOT_PYTHON_MODULE_LIB_DIR");
 			if(lib_dir && strlen(lib_dir) > 0) {
 				auto sys = py::module_::import("sys");
