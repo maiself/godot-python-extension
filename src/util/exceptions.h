@@ -7,11 +7,8 @@
 #include <pybind11/pybind11.h>
 
 #include "extension/extension.h"
+#include "util/system.h"
 #include "util/python_utils.h"
-
-#ifdef WINDOWS_ENABLED
-#include <processthreadsapi.h>
-#endif
 
 
 #ifdef _MSC_VER
@@ -24,27 +21,8 @@
 namespace pygodot {
 
 
-// XXX: may skip cleanup
-inline void system_quick_exit(int status) {
-#ifdef WINDOWS_ENABLED
-	TerminateProcess(GetCurrentProcess(), status);
-#else
-	std::quick_exit(status);
-#endif
-}
-
-
-inline py::object get_exception_value(const py::error_already_set& exception) {
-	return exception.value();
-}
-
-inline py::object get_exception_value(const py::builtin_exception& exception) {
-	exception.set_error();
-	py::object type, value, trace;
-	PyErr_Fetch(&type.ptr(), &value.ptr(), &trace.ptr());
-	PyErr_NormalizeException(&type.ptr(), &value.ptr(), &trace.ptr());
-	return value;
-}
+py::object get_exception_value(const py::error_already_set& exception);
+py::object get_exception_value(const py::builtin_exception& exception);
 
 
 template<typename Note>
@@ -64,16 +42,7 @@ py::object add_exception_notes(py::object exception_value, Notes&&... notes) {
 }
 
 
-inline std::string format_exception_value(py::object value) {
-	py::handle format_exception;
-	try {
-		format_exception = resolve_name("godot._internal.utils.format_exception");
-	}
-	catch(...) {
-		format_exception = py::module_::import("traceback").attr("format_exception");
-	}
-	return py::str("").attr("join")(format_exception(value)).attr("removesuffix")("\n").cast<py::str>();
-}
+std::string format_exception_value(py::object value);
 
 
 template<typename Exception, typename... Notes>
@@ -88,7 +57,7 @@ std::string format_exception(const Exception& exception, Notes&&... notes) {
 	catch(const py::error_already_set& exception) { \
 		if(exception.matches(PyExc_SystemExit)) { \
 			py::object code = exception.value().attr("code"); \
-			system_quick_exit(code.is_none() ? 0 : code.cast<int>()); /* XXX: may skip cleanup */ \
+			system_quick_exit(code.is_none() ? 0 : code.cast<int>()); \
 		} \
 		extension_interface::print_error(format_exception(exception __VA_OPT__(,) __VA_ARGS__).data(), \
 			__FUNCTION__, __FILE__, __LINE__, false); \
@@ -117,25 +86,7 @@ std::string format_exception(const Exception& exception, Notes&&... notes) {
 	CATCH_EXCEPTIONS_AND_PRINT_ERRORS_THEN({ std::fflush(stdout); std::abort(); }, __VA_ARGS__)
 
 
-inline std::string get_fully_qualified_name(py::handle obj) {
-	try {
-		py::object name = py::getattr(obj, "__qualname__");
-		if(name.is_none()) {
-			name = py::getattr(obj, "__name__");
-		}
-		if(name.is_none()) {
-			return py::str(obj);
-		}
-		py::object mod = py::getattr(obj, "__module__");
-		if(mod.is_none() || mod.equal(py::str("builtins"))) {
-			return py::str(name);
-		}
-		return py::str(mod + py::str(".") + name);
-	}
-	catch(...) {
-		return py::str(obj);
-	}
-}
+std::string get_fully_qualified_name(py::handle obj);
 
 
 template<typename Arg, typename... Args>

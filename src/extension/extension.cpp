@@ -12,6 +12,7 @@
 
 #include "extension/extension.h"
 #include "util/exceptions.h"
+#include "util/system.h"
 #include "variant/string.h"
 
 
@@ -33,22 +34,6 @@ static std::vector<std::function<void()>> cleanup_functions;
 void register_cleanup_func(std::function<void()> func) {
 	cleanup_functions.push_back(func);
 }
-
-
-#ifdef UNIX_ENABLED
-
-static bool promote_lib_to_global(const char* path) {
-	if(void* lib = dlopen(path, RTLD_GLOBAL | RTLD_NOW | RTLD_NOLOAD)) {
-		dlclose(lib);
-		return true;
-	}
-	else if(const char* err = dlerror()) {
-		printf("error promoting %s to RTLD_GLOBAL via dlopen: %s\n", path, err);
-	}
-	return false;
-}
-
-#endif
 
 
 static bool _init_godot_module() {
