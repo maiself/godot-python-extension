@@ -9,6 +9,10 @@
 #include "extension/extension.h"
 #include "util/python_utils.h"
 
+#ifdef WINDOWS_ENABLED
+#include <processthreadsapi.h>
+#endif
+
 
 #ifdef _MSC_VER
 #  define GENERATE_TRAP() __debugbreak()
@@ -18,6 +22,16 @@
 
 
 namespace pygodot {
+
+
+// XXX: may skip cleanup
+inline void system_quick_exit(int status) {
+#ifdef WINDOWS_ENABLED
+	TerminateProcess(GetCurrentProcess(), status);
+#else
+	std::quick_exit(status);
+#endif
+}
 
 
 inline py::object get_exception_value(const py::error_already_set& exception) {
@@ -74,7 +88,7 @@ std::string format_exception(const Exception& exception, Notes&&... notes) {
 	catch(const py::error_already_set& exception) { \
 		if(exception.matches(PyExc_SystemExit)) { \
 			py::object code = exception.value().attr("code"); \
-			std::quick_exit(code.is_none() ? 0 : code.cast<int>()); /* XXX: may skip cleanup */ \
+			system_quick_exit(code.is_none() ? 0 : code.cast<int>()); /* XXX: may skip cleanup */ \
 		} \
 		extension_interface::print_error(format_exception(exception __VA_OPT__(,) __VA_ARGS__).data(), \
 			__FUNCTION__, __FILE__, __LINE__, false); \
