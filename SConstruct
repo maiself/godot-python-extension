@@ -6,7 +6,6 @@ This file is partially derived from [godotengine/godot-cpp](https://github.com/g
 
 import sys
 import os
-import subprocess
 import pathlib
 
 from SCons.Errors import UserError
@@ -108,18 +107,18 @@ opts.Add(
 opts.Add(
 	PathVariable(
 		key="python",
-		help="Path to the `python` to build against. Must be set together with `python_config`.",
-		default='python',
-		validator=build_utils.validate_executable,
+		help="Path to the `python` to build against.",
+		default='python3',
+		validator=(lambda key, val, env: build_utils.validate_executable(key, val, env)
+			if not env.get('python_lib_dir') else None),
 	)
 )
 
 opts.Add(
 	PathVariable(
-		key="python_config",
-		help="Path to the `python-config` to build against. Must be set together with `python`.",
-		default='python-config',
-		validator=build_utils.validate_executable,
+		key="python_lib_dir",
+		help="Path to the Python `lib` directory or the Python build directory. Used to locate the `_sysconfigdata_*.py` file if the built `python` cannot be run on the local host.",
+		default=None,
 	)
 )
 
@@ -205,8 +204,8 @@ def check_godot_version():
 	if env.get('skip_extract_api_files'):
 		return
 
-	major, minor = [int(x)for x in subprocess.run([build_utils.get_executable_path('godot', env), '--version'],
-		text=True, capture_output=True, check=True).stdout.split('.')[:2]]
+	major, minor = [int(x)for x in build_utils.run_with_output(
+		build_utils.get_executable_path('godot', env), '--version').split('.')[:2]]
 
 	if (major << 16) + (minor << 8) < 0x040200:
 		raise RuntimeError(f'Godot version 4.2 or newer required.')
@@ -230,15 +229,15 @@ if '--help' not in sys.argv:
 
 # gather sources
 
-sources = []
-python_sources = []
+sources = set()
+python_sources = set()
 
-sources.extend(pathlib.Path('src').glob('**/*.cpp'))
+sources.update(pathlib.Path('src').glob('**/*.cpp'))
 
 for ext in ('py', 'pyc', 'json', 'svg', 'md'):
-	python_sources.extend(pathlib.Path('lib').glob(f'**/*.{ext}'))
+	python_sources.update(pathlib.Path('lib').glob(f'**/*.{ext}'))
 
-python_sources.append(pathlib.Path('lib/godot/_internal/extension_api.json'))
+python_sources.add(pathlib.Path('lib/godot/_internal/extension_api.json'))
 
 
 # filter
@@ -339,26 +338,23 @@ strip = env.get('strip', False)
 env.Append(CCFLAGS = ['-fvisibility=hidden', *['-flto'] * with_lto]) # XXX
 env.Append(LINKFLAGS = ['-fvisibility=hidden', *['-flto'] * with_lto, *['-s'] * strip]) # XXX
 
-def _run_pyconfig(*args) -> list[str]:
-	return subprocess.run([env['python_config'], *args], capture_output=True, text=True).stdout.split()
 
-env.Append(LINKFLAGS = _run_pyconfig('--ldflags'))
-env.Append(LIBS = [lib.removeprefix('-l') for lib in _run_pyconfig('--embed', '--libs')])
+from tools import python_config
+_config_vars = python_config.get_python_config_vars(env)
 
-
-# XXX: is this the best way to get the library path?
-PYTHON_LIBRARY_PATH = subprocess.run([env['python'], '-c',
-			'import sysconfig ; print(sysconfig.get_config_var("LDLIBRARY"))'
-		],
-		capture_output = True,
-		text = True
-	).stdout.strip()
-
-env.Append(CPPDEFINES = [f'PYTHON_LIBRARY_PATH=\\"{PYTHON_LIBRARY_PATH}\\"'])
+env.Append(LINKFLAGS = _config_vars.link_flags)
+env.Append(LIBS = _config_vars.link_libs)
+env.Append(CPPPATH = _config_vars.include_flags)
 
 
-# set include paths
-env.Append(CPPPATH = _run_pyconfig('--includes'))
+if env['platform'] == 'windows':
+	# linker has trouble if the table is too large
+	env.Append(CPPDEFINES = ['CLASS_VIRTUAL_CALL_TABLE_SIZE=512'])
+
+else:
+	env.Append(CPPDEFINES = [f'PYTHON_LIBRARY_PATH=\\"{_config_vars.ldlibrary or ""}\\"'])
+
+
 env.Prepend(CPPPATH=['src', os.fspath(generated_path), 'extern/pybind11/include'])
 
 

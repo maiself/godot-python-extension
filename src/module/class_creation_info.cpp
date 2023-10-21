@@ -13,6 +13,11 @@
 #include <pybind11/stl.h>
 
 
+#ifndef CLASS_VIRTUAL_CALL_TABLE_SIZE
+#define CLASS_VIRTUAL_CALL_TABLE_SIZE 1024
+#endif
+
+
 namespace std {
 	template<>
 	struct hash<std::pair<PyObject*, size_t>> {
@@ -83,7 +88,7 @@ consteval auto generate_call_virtuals(std::index_sequence<Is...> seq) {
 }
 
 
-template<size_t N = 1024>
+template<size_t N = CLASS_VIRTUAL_CALL_TABLE_SIZE>
 consteval auto generate_call_virtuals() {
 	return generate_call_virtuals(std::make_index_sequence<N>{});
 }

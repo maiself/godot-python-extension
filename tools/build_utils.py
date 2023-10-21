@@ -6,6 +6,7 @@ import sys
 import os
 import platform
 import shutil
+import subprocess
 
 import SCons
 from SCons.Errors import UserError
@@ -177,4 +178,8 @@ def validate_executable(key, val, env):
 		elif not os.access(path, os.X_OK):
 			raise UserError(f"Path '{key}' is not executable: {val!r} (found in PATH as {path!r})")
 
+
+
+def run_with_output(*args: list[str], **kwargs) -> str:
+	return subprocess.run(args, capture_output=True, text=True, check=True, **kwargs).stdout
 
