@@ -35,6 +35,10 @@ else:
 		yield
 
 
+class MethodBindError(Exception):
+	__module__ = Exception.__module__ # hide module to make traceback easier to read
+
+
 
 def keyword_sanitize_identifier(ident: str) -> str:
 	return ident + '_' if keyword.iskeyword(ident) else ident
@@ -176,7 +180,7 @@ def bind_method(cls, type_info, method_info, with_docs=True):
 
 	if not method:
 		with _configured_warn_and_continue_or_raise():
-			raise AttributeError(
+			raise MethodBindError(
 				f'''invalid {
 					'utility function' if is_utility
 					else 'variant method' if is_variant_type
@@ -325,7 +329,7 @@ def bind_variant_constructors(cls, type_info):
 
 		if constructors[-1] is None:
 			with _configured_warn_and_continue_or_raise():
-				raise AttributeError(
+				raise MethodBindError(
 					f'''invalid variant constructor: {type_info.name}{
 						case_doc_patterns[-1].replace('godot.', '')} (index {constructor_info.index})'''
 				)
@@ -461,7 +465,7 @@ def _bind_op(cls, type_info, op_info, method_name, op_enum, reverse=False):
 
 		if not op_eval:
 			with _configured_warn_and_continue_or_raise():
-				raise AttributeError(
+				raise MethodBindError(
 					f'''invalid operator evaluator: {type_info.name}.{method_name}() -> {op_info.return_type}'''
 				)
 
@@ -485,7 +489,7 @@ def _bind_op(cls, type_info, op_info, method_name, op_enum, reverse=False):
 
 	if not op_eval:
 		with _configured_warn_and_continue_or_raise():
-			raise AttributeError(
+			raise MethodBindError(
 				f'''invalid operator evaluator: {left_type.__name__}.{method_name}({right_type.__name__}) -> {op_info.return_type}'''
 			)
 
@@ -609,7 +613,7 @@ def bind_variant_operators(cls, type_info):
 
 		if not getter:
 			with _configured_warn_and_continue_or_raise():
-				raise AttributeError(
+				raise MethodBindError(
 					f'''invalid keyed getter: {type_info.name}[Variant] -> {indexing_return_type}'''
 					if type_info.get('is_keyed') else
 					f'''invalid indexed getter: {type_info.name}[int] -> {indexing_return_type}'''
@@ -617,7 +621,7 @@ def bind_variant_operators(cls, type_info):
 
 		if not setter:
 			with _configured_warn_and_continue_or_raise():
-				raise AttributeError(
+				raise MethodBindError(
 					f'''invalid keyed setter: {type_info.name}[Variant] = {indexing_return_type}'''
 					if type_info.get('is_keyed') else
 					f'''invalid indexed setter: {type_info.name}[int] = {indexing_return_type}'''
