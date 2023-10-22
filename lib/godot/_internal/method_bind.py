@@ -3,6 +3,7 @@ import itertools
 import functools
 import collections.abc
 import copy
+import contextlib
 
 import _gdextension as gde
 
@@ -19,6 +20,21 @@ from .api_info import api, get_via_path, pretty_string
 
 
 import keyword
+
+
+# set to `True` to only warn and then continue if a method fails to bind
+# set to `False` to fully raise the exception and then quit if a method fails to bind
+_method_bind_fail_warn_and_continue = True
+
+
+if _method_bind_fail_warn_and_continue:
+	_configured_warn_and_continue_or_raise = utils.print_exceptions_and_continue
+else:
+	@contextlib.contextmanager
+	def _configured_warn_and_continue_or_raise():
+		yield
+
+
 
 def keyword_sanitize_identifier(ident: str) -> str:
 	return ident + '_' if keyword.iskeyword(ident) else ident
@@ -138,6 +154,8 @@ def bind_method(cls, type_info, method_info, with_docs=True):
 			return_value_info = return_value_info,
 		)
 
+	method = None
+
 	if 'hash' in method_info:
 		if is_utility:
 			method = get_method(
@@ -157,7 +175,17 @@ def bind_method(cls, type_info, method_info, with_docs=True):
 		method = lambda *args, **kwargs: None # XXX return default value
 
 	if not method:
-		raise RuntimeError
+		with _configured_warn_and_continue_or_raise():
+			raise AttributeError(
+				f'''invalid {
+					'utility function' if is_utility
+					else 'variant method' if is_variant_type
+					else 'class method'
+				}: {
+					method_info.name if is_utility
+					else '.'.join((type_info.name, method_info.name))
+				}'''
+			)
 
 	# we now have `class_method_info: gde.GDExtensionClassMethodInfo` and `method` callable
 
@@ -295,6 +323,13 @@ def bind_variant_constructors(cls, type_info):
 
 		case_doc_patterns.append(f'''({', '.join(arg_info.type for arg_info in arg_infos)})''') # XXX: builtin?
 
+		if constructors[-1] is None:
+			with _configured_warn_and_continue_or_raise():
+				raise AttributeError(
+					f'''invalid variant constructor: {type_info.name}{
+						case_doc_patterns[-1].replace('godot.', '')} (index {constructor_info.index})'''
+				)
+
 	namespace = {
 		constructor_name(index): constructor for index, constructor in enumerate(constructors)
 	}
@@ -388,7 +423,7 @@ def _init_op_mapping():
 		__mul__ = ('*', godot.Variant.Operator.OP_MULTIPLY),
 		__truediv__ = ('/', godot.Variant.Operator.OP_DIVIDE),
 
-		__neq__ = ('unary-', godot.Variant.Operator.OP_NEGATE), # unary
+		__neg__ = ('unary-', godot.Variant.Operator.OP_NEGATE), # unary
 		__pos__ = ('unary+', godot.Variant.Operator.OP_POSITIVE), # unary
 
 		__mod__ = ('%', godot.Variant.Operator.OP_MODULE),
@@ -414,7 +449,7 @@ def _init_op_mapping():
 
 def _bind_op(cls, type_info, op_info, method_name, op_enum, reverse=False):
 	reversed_args = (method_name in ('__contains__', )) or reverse
-	is_unary = method_name in ('__neq__', '__pos__', '__inv__', '__not__')
+	is_unary = method_name in ('__neg__', '__pos__', '__inv__', '__not__')
 
 	if is_unary:
 		op_eval = gde.variant_get_ptr_operator_evaluator(
@@ -423,6 +458,12 @@ def _bind_op(cls, type_info, op_info, method_name, op_enum, reverse=False):
 				godot.Variant.Type.TYPE_NIL,
 				TypeInfo.from_api_info_type_string(op_info.return_type).variant_type,
 			)
+
+		if not op_eval:
+			with _configured_warn_and_continue_or_raise():
+				raise AttributeError(
+					f'''invalid operator evaluator: {type_info.name}.{method_name}() -> {op_info.return_type}'''
+				)
 
 		op = lambda self: op_eval(self)
 
@@ -441,6 +482,12 @@ def _bind_op(cls, type_info, op_info, method_name, op_enum, reverse=False):
 
 	if reversed_args:
 		left_type, right_type = right_type, left_type
+
+	if not op_eval:
+		with _configured_warn_and_continue_or_raise():
+			raise AttributeError(
+				f'''invalid operator evaluator: {left_type.__name__}.{method_name}({right_type.__name__}) -> {op_info.return_type}'''
+			)
 
 	def register(method_name, op):
 		op.__name__ = method_name
@@ -559,6 +606,22 @@ def bind_variant_operators(cls, type_info):
 			else:
 				__getitem__ = getter
 				__setitem__ = setter
+
+		if not getter:
+			with _configured_warn_and_continue_or_raise():
+				raise AttributeError(
+					f'''invalid keyed getter: {type_info.name}[Variant] -> {indexing_return_type}'''
+					if type_info.get('is_keyed') else
+					f'''invalid indexed getter: {type_info.name}[int] -> {indexing_return_type}'''
+				)
+
+		if not setter:
+			with _configured_warn_and_continue_or_raise():
+				raise AttributeError(
+					f'''invalid keyed setter: {type_info.name}[Variant] = {indexing_return_type}'''
+					if type_info.get('is_keyed') else
+					f'''invalid indexed setter: {type_info.name}[int] = {indexing_return_type}'''
+				)
 
 		if indexing_return_type in ['String', 'StringName']:
 			__getitem__inner = __getitem__

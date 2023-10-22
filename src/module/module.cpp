@@ -21,11 +21,15 @@ namespace pygodot {
 namespace py = pybind11;
 
 
-auto variant_get_ptr_constructor(
+py::object variant_get_ptr_constructor(
 	GDExtensionVariantType type, const PyGDExtensionClassMethodInfo& method, GDExtensionInt constructor_index)
 {
 	GDExtensionPtrConstructor constructor_ptr = extension_interface::variant_get_ptr_constructor(
 		type, constructor_index);
+
+	if(!constructor_ptr) {
+		return py::none();
+	}
 
 	py::handle __init_uninitialized__ = variant_type_handle(type)
 		.attr("__init_uninitialized__");
@@ -44,9 +48,13 @@ auto variant_get_ptr_constructor(
 	return py::cpp_function(std::move(func), py::name("constructor")); // TODO: name
 }
 
-auto variant_get_ptr_indexed_getter(GDExtensionVariantType type, GDExtensionVariantType return_value_type)
+py::object variant_get_ptr_indexed_getter(GDExtensionVariantType type, GDExtensionVariantType return_value_type)
 {
 	auto* indexed_getter = extension_interface::variant_get_ptr_indexed_getter(type);
+
+	if(!indexed_getter) {
+		return py::none();
+	}
 
 	//py::handle return_type = variant_type_handle(return_value_type);
 
@@ -63,9 +71,13 @@ auto variant_get_ptr_indexed_getter(GDExtensionVariantType type, GDExtensionVari
 	);
 }
 
-auto variant_get_ptr_indexed_setter(GDExtensionVariantType type, GDExtensionVariantType value_type)
+py::object variant_get_ptr_indexed_setter(GDExtensionVariantType type, GDExtensionVariantType value_type)
 {
 	auto* indexed_setter = extension_interface::variant_get_ptr_indexed_setter(type);
+
+	if(!indexed_setter) {
+		return py::none();
+	}
 
 	//py::handle type_ = variant_type_handle(value_type);
 
@@ -79,10 +91,14 @@ auto variant_get_ptr_indexed_setter(GDExtensionVariantType type, GDExtensionVari
 	);
 }
 
-auto variant_get_ptr_keyed_getter(GDExtensionVariantType type, GDExtensionVariantType key_type,
+py::object variant_get_ptr_keyed_getter(GDExtensionVariantType type, GDExtensionVariantType key_type,
 	GDExtensionVariantType return_value_type)
 {
 	auto* keyed_getter = extension_interface::variant_get_ptr_keyed_getter(type);
+
+	if(!keyed_getter) {
+		return py::none();
+	}
 
 	//py::handle return_type = variant_type_handle(return_value_type);
 
@@ -100,10 +116,14 @@ auto variant_get_ptr_keyed_getter(GDExtensionVariantType type, GDExtensionVarian
 }
 
 
-auto variant_get_ptr_keyed_setter(GDExtensionVariantType type, GDExtensionVariantType key_type,
+py::object variant_get_ptr_keyed_setter(GDExtensionVariantType type, GDExtensionVariantType key_type,
 	GDExtensionVariantType value_type)
 {
 	auto* keyed_setter = extension_interface::variant_get_ptr_keyed_setter(type);
+
+	if(!keyed_setter) {
+		return py::none();
+	}
 
 	//py::handle type_ = variant_type_handle(value_type);
 
@@ -121,10 +141,14 @@ auto variant_get_ptr_keyed_setter(GDExtensionVariantType type, GDExtensionVarian
 
 
 
-auto variant_get_ptr_getter(GDExtensionVariantType type, const StringName& member_name,
+py::object variant_get_ptr_getter(GDExtensionVariantType type, const StringName& member_name,
 	GDExtensionVariantType member_type)
 {
 	auto* getter = extension_interface::variant_get_ptr_getter(type, member_name);
+
+	if(!getter) {
+		return py::none();
+	}
 
 	//py::handle return_type = variant_type_handle(return_value_type);
 
@@ -144,10 +168,14 @@ auto variant_get_ptr_getter(GDExtensionVariantType type, const StringName& membe
 }
 
 
-auto variant_get_ptr_setter(GDExtensionVariantType type, const StringName& member_name,
+py::object variant_get_ptr_setter(GDExtensionVariantType type, const StringName& member_name,
 	GDExtensionVariantType member_type)
 {
 	auto* setter = extension_interface::variant_get_ptr_setter(type, member_name);
+
+	if(!setter) {
+		return py::none();
+	}
 
 	//py::handle type_ = variant_type_handle(value_type);
 
@@ -191,7 +219,7 @@ py::object variant_get_ptr_operator_evaluator(GDExtensionVariantOperator operato
 
 
 
-auto variant_get_ptr_builtin_method(
+py::object variant_get_ptr_builtin_method(
 	GDExtensionVariantType type, const PyGDExtensionClassMethodInfo& method, GDExtensionInt hash)
 {
 	bool is_static_method = ((method.method_flags & GDEXTENSION_METHOD_FLAG_STATIC) != 0);
@@ -199,6 +227,10 @@ auto variant_get_ptr_builtin_method(
 
 	GDExtensionPtrBuiltInMethod method_ptr = extension_interface::variant_get_ptr_builtin_method(
 		type, method.name, hash);
+
+	if(!method_ptr) {
+		return py::none();
+	}
 
 	const auto arg_types = get_arguments_cast_info(method);
 	const auto return_type = get_return_cast_info(method);
@@ -253,13 +285,17 @@ auto variant_get_ptr_builtin_method(
 }
 
 
-auto classdb_get_method_bind(
+py::object classdb_get_method_bind(
 	const StringName& class_name, const PyGDExtensionClassMethodInfo& method, GDExtensionInt hash)
 {
 	bool is_static_method = ((method.method_flags & GDEXTENSION_METHOD_FLAG_STATIC) != 0);
 
 	GDExtensionConstMethodBindPtr method_ptr = extension_interface::classdb_get_method_bind(
 		class_name, method.name, hash);
+
+	if(!method_ptr) {
+		return py::none();
+	}
 
 	const auto arg_types = get_arguments_cast_info(method);
 	const auto return_type = get_return_cast_info(method);
@@ -305,12 +341,16 @@ auto classdb_get_method_bind(
 
 
 
-auto variant_get_ptr_utility_function(const PyGDExtensionClassMethodInfo& function, GDExtensionInt hash)
+py::object variant_get_ptr_utility_function(const PyGDExtensionClassMethodInfo& function, GDExtensionInt hash)
 {
 	bool is_vararg = ((function.method_flags & GDEXTENSION_METHOD_FLAG_VARARG) != 0);
 
 	GDExtensionPtrUtilityFunction func_ptr = extension_interface::variant_get_ptr_utility_function(
 		function.name, hash);
+
+	if(!func_ptr) {
+		return py::none();
+	}
 
 	const auto return_type = get_return_cast_info(function);
 
