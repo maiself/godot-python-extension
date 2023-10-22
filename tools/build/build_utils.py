@@ -1,5 +1,5 @@
 '''
-This file is partially derived from [godotengine/godot-cpp](https://github.com/godotengine/godot-cpp)'s `SConstruct` file. See [tools/platform/license.md](tools/platform/license.md) for license.
+This file is partially derived from [godotengine/godot-cpp](https://github.com/godotengine/godot-cpp)'s `SConstruct` file. See [tools/build/platform/license.md](tools/build/platform/license.md) for license.
 '''
 
 import sys

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 '''
-This file is partially derived from [godotengine/godot-cpp](https://github.com/godotengine/godot-cpp)'s `SConstruct` file. See [tools/platform/license.md](tools/platform/license.md) for license.
+This file is partially derived from [godotengine/godot-cpp](https://github.com/godotengine/godot-cpp)'s `SConstruct` file. See [tools/build/platform/license.md](tools/build/platform/license.md) for license.
 '''
 
 import sys
@@ -10,7 +10,7 @@ import pathlib
 
 from SCons.Errors import UserError
 
-from tools import build_utils
+from tools.build import build_utils
 
 
 EnsureSConsVersion(4, 0)
@@ -75,7 +75,7 @@ opts.Add(
 # Add platform options
 tools = {}
 for pl in build_utils.platforms:
-	tool = Tool(pl, toolpath=["tools/platform"])
+	tool = Tool(pl, toolpath=["tools/build/platform"])
 	if hasattr(tool, "options"):
 		tool.options(opts)
 	tools[pl] = tool
@@ -149,7 +149,7 @@ opts.Add(
 
 
 # Targets flags tool (optimizations, debug symbols)
-target_tool = Tool("targets", toolpath=["tools/platform"])
+target_tool = Tool("targets", toolpath=["tools/build/platform"])
 target_tool.options(opts)
 
 
@@ -161,7 +161,7 @@ Help(opts.GenerateHelpText(env))
 build_utils.process_arch(env)
 
 
-tool = Tool(env["platform"], toolpath=["tools/platform"])
+tool = Tool(env["platform"], toolpath=["tools/build/platform"])
 
 if tool is None or not tool.exists(env):
 	raise ValueError("Required toolchain not found for platform " + env["platform"])
@@ -256,7 +256,7 @@ if env.get('single_source', False):
 
 
 # init builders
-from tools import builders
+from tools.build import builders
 builders.init(env)
 
 
@@ -289,7 +289,7 @@ env.Alias("generate_gdextension_api_table", [
 		source = [
 			'extern/gdextension/gdextension_interface.h',
 			builders.__file__,
-			'./tools/generate_gdextension_api_table.py',
+			'./tools/build/generate_gdextension_api_table.py',
 		],
 	)
 ])
@@ -339,7 +339,7 @@ env.Append(CCFLAGS = ['-fvisibility=hidden', *['-flto'] * with_lto]) # XXX
 env.Append(LINKFLAGS = ['-fvisibility=hidden', *['-flto'] * with_lto, *['-s'] * strip]) # XXX
 
 
-from tools import python_config
+from tools.build import python_config
 _config_vars = python_config.get_python_config_vars(env)
 
 env.Append(LINKFLAGS = _config_vars.link_flags)

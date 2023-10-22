@@ -7,7 +7,7 @@ import dataclasses
 import re
 
 
-tools_dir = pathlib.Path(__file__).parent.resolve()
+tools_dir = pathlib.Path(__file__).parent.parent.resolve()
 project_dir = tools_dir.parent
 gdextension_dir = project_dir / 'extern' / 'gdextension'
 

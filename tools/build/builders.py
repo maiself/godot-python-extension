@@ -85,7 +85,7 @@ def _patch_gdextension_interface_header(src: pathlib.Path, dest: pathlib.Path):
 
 
 def make_generate_gdextension_api_table_action(target, source, env):
-	subprocess.run(['python', './tools/generate_gdextension_api_table.py'], check=True)
+	subprocess.run(['python', pathlib.Path(__file__).parent / 'generate_gdextension_api_table.py'], check=True)
 
 
 def make_r_string_action(target, source, env):
