@@ -15,6 +15,19 @@ from . import class_type
 #from . import method_bind
 
 
+class TypeBindError(Exception):
+	__module__ = Exception.__module__ # hide module to make traceback easier to read
+
+	def __init__(self, *args, type_name: str, **kwargs):
+		super().__init__(*args, **kwargs)
+
+		self.type_name = type_name
+
+
+class TypeBindInProgressError(TypeBindError):
+	__module__ = Exception.__module__ # hide module to make traceback easier to read
+
+
 @utils.with_context
 def bind_variant_type(type_info):
 	from . import method_bind
@@ -215,7 +228,13 @@ def bind_class(class_info):
 	from .type_info import TypeInfo
 
 	if class_info.name in _class_bindings_in_progress:
-		raise RuntimeError(f'binding of class {class_info.name!r} already in process')
+		# TODO: see if these cyclic dependencies can be resolved somehow
+		with utils.print_exceptions_and_continue():
+			raise TypeBindInProgressError(
+					f'binding of class {class_info.name!r} already in progress',
+					type_name = class_info.name,
+				)
+		return
 
 	_class_bindings_in_progress.add(class_info.name)
 
