@@ -180,9 +180,16 @@ def resolve_name(name, *, context=None, use_cache=True) -> object: # XXX: assess
 				if error.obj is not obj or error.name != part:
 					raise
 
-				obj = builtins
-				for part in parts:
-					obj = getattr(obj, part)
+				try:
+					obj = builtins
+					for part in parts:
+						obj = getattr(obj, part)
+
+				except AttributeError as inner_error:
+					if inner_error.obj is not obj or inner_error.name != part:
+						raise
+
+					raise error from None
 
 		else:
 			def try_import(name):
