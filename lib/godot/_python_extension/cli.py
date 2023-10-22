@@ -6,6 +6,7 @@ import itertools
 import types
 import inspect
 import textwrap
+import pathlib
 
 import godot
 
@@ -115,25 +116,47 @@ def _repl():
 @_python_command
 def _module(module_name):
 	'''Search for and run the module named MODULE_NAME as `__main__`.'''
-	raise NotImplementedError # TODO
+
+	import runpy
+
+	del sys.argv[:sys.argv.index('--python-module')+1]
+
+	sys.path.insert(0, os.getcwd())
+
+	runpy.run_module(module_name, run_name='__main__', alter_sys=True)
+
+	sys.exit()
 
 
 @_python_command
 def _command(command_code):
 	'''Execute the statements given in COMMAND_CODE.'''
-	raise NotImplementedError # TODO
+
+	del sys.argv[:sys.argv.index('--python-command')+2]
+
+	sys.argv.insert(0, '-c')
+
+	sys.path.insert(0, '')
+
+	ns = {}
+	exec(command_code, ns, ns)
+
+	sys.exit()
 
 
 @_python_command
 def _script(script_path):
 	'''Execute the script at located SCRIPT_PATH as `__main__`.'''
-	with open(script_path, 'r') as file:
-		source = file.read()
 
-	ns = dict(
-		__file__ = script_path
-	)
-	exec(source, ns)
+	import runpy
+
+	del sys.argv[:sys.argv.index('--python-script')+1]
+
+	script_dir = str(pathlib.Path(script_path).parent.resolve())
+	sys.path.insert(0, script_dir)
+
+	runpy.run_path(script_path, run_name='__main__')
+
 	sys.exit()
 
 
