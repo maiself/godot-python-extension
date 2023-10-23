@@ -680,11 +680,67 @@ PYBIND11_EMBEDDED_MODULE(_gdextension, module_) {
 }
 
 
+namespace pygodot {
+
+namespace py = pybind11;
+
+
+static py::bytes get_file_as_bytes(py::str path) {
+	static auto* FileAccess_get_file_as_bytes = extension_interface::classdb_get_method_bind(
+		StringName("FileAccess"), StringName("get_file_as_bytes"), 659035735); // (String) -> PackedByteArray
+
+	static auto* FileAccess_get_open_error = extension_interface::classdb_get_method_bind(
+		StringName("FileAccess"), StringName("get_open_error"), 166280745); // () -> Error (GDExtensionInt)
+
+	static auto* PackedByteArray_size = extension_interface::variant_get_ptr_builtin_method(
+		GDExtensionVariantType::GDEXTENSION_VARIANT_TYPE_PACKED_BYTE_ARRAY,
+		StringName("size"), 3173160232); // () -> GDExtensionInt
+
+	PackedByteArray packed_byte_array;
+
+	{
+		String path_str = path;
+		GDExtensionConstTypePtr args[] = {path_str};
+
+		extension_interface::object_method_bind_ptrcall(
+			FileAccess_get_file_as_bytes, nullptr, args, (GDExtensionTypePtr)&packed_byte_array);
+	}
+
+	GDExtensionInt size;
+
+	{
+		PackedByteArray_size(packed_byte_array, nullptr, (GDExtensionTypePtr)&size, 0);
+	}
+
+	if(size <= 0) {
+		{
+			GDExtensionInt error;
+
+			extension_interface::object_method_bind_ptrcall(
+				FileAccess_get_open_error, nullptr, nullptr, (GDExtensionTypePtr)&error);
+
+			throw std::runtime_error(std::string("error while getting bytes of file \"") + std::string(path) + "\": godot.Error(" + std::string(py::str(py::int_(error))) + ")");
+		}
+
+		return py::bytes();
+	}
+
+	auto* data = extension_interface::packed_byte_array_operator_index_const(packed_byte_array, 0);
+
+	return py::bytes(reinterpret_cast<const char*>(data), size);
+}
+
+
+} // namespace pygodot
+
+
 PYBIND11_EMBEDDED_MODULE(_godot_internal_core_utils, module_) {
 	using namespace pygodot;
 
 	module_.def("variant_type_from_enum", variant_type_handle<GDExtensionVariantType>);
 	module_.def("variant_enum_from_type_inferred", variant_type_from_type_handle_inferred<py::object>);
+
+	module_.def("get_file_as_bytes", get_file_as_bytes);
 }
 
 
