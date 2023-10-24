@@ -50,17 +50,6 @@ opts.Add(
 	)
 )
 
-# Editor and template_debug are compatible (i.e. you can use the same binary for Godot editor builds and Godot debug templates).
-# Godot release templates are only compatible with "template_release" builds.
-# For this reason, we default to template_debug builds, unlike Godot which defaults to editor builds.
-opts.Add(
-	EnumVariable(
-		key="target",
-		help="Compilation target",
-		default=env.get("target", "template_debug"),
-		allowed_values=("editor", "template_release", "template_debug"),
-	)
-)
 
 opts.Add(
 	EnumVariable(
@@ -146,6 +135,10 @@ opts.Add(
 		default=False,
 	)
 )
+
+
+# for now there's no distinction between build targets, so always use template_release
+env['target'] = 'template_release'
 
 
 # Targets flags tool (optimizations, debug symbols)
@@ -365,7 +358,7 @@ env.Prepend(CPPPATH=['src', os.fspath(generated_path), 'extern/pybind11/include'
 
 
 # library name
-suffix = ".{}.{}".format(env["platform"], env["target"])
+suffix = ".{}".format(env["platform"])
 if env.dev_build:
 	suffix += ".dev"
 if env["precision"] == "double":
