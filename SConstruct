@@ -161,6 +161,10 @@ Help(opts.GenerateHelpText(env))
 build_utils.process_arch(env)
 
 
+# godot-cpp's linux toolchain config needs this set
+env['use_hot_reload'] = False
+
+
 tool = Tool(env["platform"], toolpath=["tools/build/platform"])
 
 if tool is None or not tool.exists(env):
@@ -184,6 +188,7 @@ print("Building for architecture " + env["arch"] + " on platform " + env["platfo
 # Require C++20
 if env.get("is_msvc", False):
 	env.Append(CXXFLAGS=["/std:c++20"])
+	env.Append(CCFLAGS=["/EHsc"])
 else:
 	env.Append(CXXFLAGS=["-std=c++20"])
 

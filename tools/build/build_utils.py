@@ -1,5 +1,5 @@
 '''
-This file is partially derived from [godotengine/godot-cpp](https://github.com/godotengine/godot-cpp)'s `SConstruct` file. See [tools/build/platform/license.md](tools/build/platform/license.md) for license.
+This file is partially derived from [godotengine/godot-cpp](https://github.com/godotengine/godot-cpp)'s `tools/godotcpp.py` file. See [tools/build/platform/license.md](tools/build/platform/license.md) for license.
 '''
 
 import sys
@@ -20,7 +20,7 @@ platforms = (
 	"windows",
 	"android",
 	"ios",
-	"javascript"
+	"web"
 )
 
 architecture_array = [
@@ -128,7 +128,7 @@ def process_arch(env):
 			env["arch"] = "universal"
 		elif env["platform"] == "android":
 			env["arch"] = "arm64"
-		elif env["platform"] == "javascript":
+		elif env["platform"] == "web":
 			env["arch"] = "wasm32"
 		else:
 			host_machine = platform.machine().lower()
