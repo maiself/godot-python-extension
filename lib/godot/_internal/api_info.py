@@ -253,20 +253,41 @@ def pretty_string(obj, *, max_depth: int | None = None):
 		return repr(obj)
 
 
-def load_api_data() -> Namespace:
-	if __package__:
-		package = importlib.resources.files(__package__)
-	else:
-		package = pathlib.Path(__file__).parent
+def load_api_data(data: bytes | str | None = None) -> Namespace:
+	global api
 
-	data = package.joinpath('extension_api.json').read_text()
+	if data is None:
+		if __package__:
+			package = importlib.resources.files(__package__)
+		else:
+			package = pathlib.Path(__file__).parent
 
-	return json.loads(data,
+		data = package.joinpath('extension_api.json').read_text()
+
+	elif isinstance(data, bytes):
+		data = data.decode()
+
+	elif not isinstance(data, str):
+		raise TypeError(
+			f'expected `data` to be `bytes`, `str` or `None`, received {type(data)!r}')
+
+	api = json.loads(data,
 		object_hook = lambda obj: Namespace(**obj))
 
-api = load_api_data()
+	return api
 
 
+def __getattr__(name):
+	if name == 'api':
+		return load_api_data()
+
+	raise AttributeError(
+		f'module {__name__!r} has no attribute {name!r}')
+
+
+def _get_api():
+	'''Return the loaded api object. To be used by this module to trigger api load when accessing.'''
+	return sys.modules[__name__].api
 
 
 def get_api_entry_to_type_mapping():
@@ -308,7 +329,7 @@ def display_api_layout():
 def _find_broken_properties():
 	had_missing = False
 
-	for class_ in api.classes:
+	for class_ in _get_api().classes:
 		if had_missing:
 			print()
 			had_missing = False
@@ -322,7 +343,7 @@ def _find_broken_properties():
 
 		base = class_.name
 		while base:
-			base = api.classes.get(base)
+			base = _get_api().classes.get(base)
 
 			methods.extend(base.get('methods', []))
 
@@ -369,7 +390,7 @@ def main():
 					sys.exit(1)
 
 			try:
-				obj = get_via_path(api, obj_path)
+				obj = get_via_path(_get_api(), obj_path)
 
 			except ValueError:
 				print(f'could not find object at api path {obj_path!r}')

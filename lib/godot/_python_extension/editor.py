@@ -23,7 +23,7 @@ def _register_export_plugin():
 
 def init_extension():
 	godot.Callable(_install_icons).call_deferred()
-	#godot.Callable(_register_export_plugin).call_deferred()
+	godot.Callable(_register_export_plugin).call_deferred()
 
 
 

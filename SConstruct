@@ -237,7 +237,8 @@ sources.update(pathlib.Path('src').glob('**/*.cpp'))
 for ext in ('py', 'pyc', 'json', 'svg', 'md'):
 	python_sources.update(pathlib.Path('lib').glob(f'**/*.{ext}'))
 
-python_sources.add(pathlib.Path('lib/godot/_internal/extension_api.json'))
+# exclude `extension_api.json` as it will be retrieved and cached when running from the editor
+python_sources.discard(pathlib.Path('lib/godot/_internal/extension_api.json'))
 
 
 # filter
