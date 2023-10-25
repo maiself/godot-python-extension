@@ -374,7 +374,7 @@ env["OBJSUFFIX"] = suffix + env["OBJSUFFIX"]
 library_name = "libgodot-python{}{}".format(env["suffix"], env["SHLIBSUFFIX"])
 
 library = env.SharedLibrary(
-	target = f"bin/{library_name}",
+	target = f"bin/{env['platform']}-{env['arch']}/{library_name}",
 	source = sources,
 )
 

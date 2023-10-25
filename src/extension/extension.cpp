@@ -43,6 +43,8 @@ static struct runtime_config_t {
 	std::filesystem::path library_path;
 	std::filesystem::path lib_dir_path;
 
+	std::filesystem::path python_home_path;
+
 	void init() {
 		// `executable_path`, `program_name` and `argv`
 		executable_path = get_executable_path();
@@ -57,19 +59,8 @@ static struct runtime_config_t {
 		// `project_path`
 		project_path = std::filesystem::current_path();
 
-		// see if `--path` was specified to godot
-		for(int i = 1; i < static_cast<int>(argv.size()) - 1; i++) {
-			if(argv[i] == "--") {
-				break;
-			}
-			if(argv[i] == "--path" && argv[i+1][0] != '-') {
-				project_path = std::filesystem::path(argv[i+1]);
-				if(!project_path.is_absolute()) {
-					project_path = std::filesystem::current_path() / project_path;
-				}
-				break;
-			}
-		}
+		bool likely_running_from_editor = std::filesystem::exists(project_path / ".godot")
+			&& std::filesystem::exists(project_path / "project.godot");
 
 		// `library_path`
 		{
@@ -82,18 +73,23 @@ static struct runtime_config_t {
 				/ std::filesystem::path(std::string(library_res_path).data() + strlen("res://"));
 		}
 
-		if(!std::filesystem::exists(project_path / ".godot") || !std::filesystem::exists(library_path)) {
-			// not running from the editor, likely a template build with the library next to the executable
-			library_path = project_path / library_path.filename();
-		}
+		auto platform_arch = library_path.parent_path().filename();
 
-		if(!std::filesystem::exists(library_path)) {
+		if(!likely_running_from_editor) {
 			library_path = executable_path.parent_path() / library_path.filename();
 		}
 
 		// `lib_dir_path`
 		lib_dir_path = library_path.parent_path();
-	};
+
+		// `python_home_path`
+		if(likely_running_from_editor) {
+			python_home_path = lib_dir_path;
+		}
+		else {
+			python_home_path = lib_dir_path / "lib" / platform_arch;
+		}
+	}
 } runtime_config;
 
 
@@ -140,13 +136,16 @@ static bool init_python_isolated() {
 		check_status("python initialization, setting " + name);
 	};
 
-	set_string(config.home, "home", runtime_config.lib_dir_path.string());
-	set_string(config.base_exec_prefix, "base_exec_prefix", runtime_config.lib_dir_path.string());
+	set_string(config.home, "home", runtime_config.python_home_path.string());
+
+	set_string(config.base_prefix, "base_prefix", runtime_config.python_home_path.string());
+	set_string(config.prefix, "prefix", runtime_config.python_home_path.string());
+
+	set_string(config.base_exec_prefix, "base_exec_prefix", runtime_config.python_home_path.string());
+	set_string(config.exec_prefix, "exec_prefix", runtime_config.python_home_path.string());
+
 	set_string(config.base_executable, "base_executable", runtime_config.executable_path.string());
-	set_string(config.base_prefix, "base_prefix", runtime_config.lib_dir_path.string());
-	set_string(config.exec_prefix, "exec_prefix", runtime_config.lib_dir_path.string());
 	set_string(config.executable, "executable", runtime_config.executable_path.string());
-	set_string(config.prefix, "prefix", runtime_config.lib_dir_path.string());
 
 	set_string(config.program_name, "program_name", runtime_config.program_name);
 

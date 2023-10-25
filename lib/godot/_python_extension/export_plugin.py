@@ -1,8 +1,68 @@
+import pathlib
+import re
+import shutil
+
 import godot
 
 from godot._internal.extension_classes import *
 
 from . import utils
+
+
+_platforms = (
+	'linux',
+	'macos',
+	'windows',
+	'android',
+	'ios',
+	'web'
+)
+
+_architectures = [
+	'universal',
+	'x86_32',
+	'x86_64',
+	'arm32',
+	'arm64',
+	'rv64',
+	'ppc32',
+	'ppc64',
+	'wasm32'
+]
+
+
+def _get_platform_from_features(features: list[str]) -> str:
+	platforms = [feature for feature in features if feature in _platforms]
+	if len(platforms) != 1:
+		raise RuntimeError(f'unable to determine platform from features')
+	return platforms[0]
+
+
+def _get_arch_from_features(features: list[str]) -> str:
+	archs = [feature for feature in features if feature in _architectures]
+	if len(archs) != 1:
+		raise RuntimeError(f'unable to determine architecture from features')
+	return archs[0]
+
+
+def _get_current_gdextension_path() -> pathlib.Path:
+	for ext_path in godot.GDExtensionManager.get_loaded_extensions():
+		if pathlib.Path(ext_path).name == 'python.gdextension':
+			path = pathlib.Path(ext_path.removeprefix('res://'))
+			if path.exists():
+				return path
+
+	raise RuntimeError('unable to locate python gdextension path')
+
+
+def _get_target_platform_lib(platform, arch) -> pathlib.Path:
+	for line in _get_current_gdextension_path().read_text().splitlines():
+		if match_ := re.fullmatch(rf'{platform}\.{arch}\s*=\s*"res://(?P<path>.+)"', line):
+			path = pathlib.Path(match_.group('path'))
+			if path.exists():
+				return path
+
+	raise RuntimeError('unable to target platform lib path')
 
 
 @register_extension_class
@@ -12,10 +72,38 @@ class PythonExportPlugin(godot.EditorExportPlugin):
 		return type(self).__name__
 
 	def _export_begin(self, features: list[str], is_debug: bool, path: str, flags: int):
-		if 'linux' in features:
-			self.add_shared_object('bin/libpython3.12.so.1.0', [], '') # TODO: use correct library path
+		platform = _get_platform_from_features(features)
+		arch = _get_arch_from_features(features)
+
+		platform_lib = _get_target_platform_lib(platform, arch)
+		platform_dir = platform_lib.parent
+		platform_so_suffix = '.so' if platform != 'windows' else '.dll'
+
+		shared_objects = set()
+		files = set()
+
+		for path_ in platform_dir.glob('**/*'):
+			if not path_.is_file():
+				continue
+			if platform_so_suffix in path_.suffixes:
+				shared_objects.add(path_)
+			else:
+				files.add(path_)
+
+		for shared_object in shared_objects:
+			if shared_object == platform_lib:
+				continue
+			self.add_shared_object(str(shared_object), [], '')
+
+		target_dir = pathlib.Path(path).parent / 'lib' / f'{platform}-{arch}'
+
+		for file in files:
+			dir_ = target_dir / file.parent.relative_to(platform_dir)
+			dir_.mkdir(parents=True, exist_ok=True)
+			shutil.copy2(file, dir_)
 
 		self._add_api_json()
+
 
 	def _add_api_json(self):
 		import sys

@@ -5,33 +5,15 @@ entry_symbol = "python_extension_init"
 
 [libraries]
 
-macos.debug = "res://bin/libgodot-python.macos.template_debug.framework"
-macos.release = "res://bin/libgodot-python.macos.template_release.framework"
-windows.debug.x86_32 = "res://bin/libgodot-python.windows.template_debug.x86_32.dll"
-windows.release.x86_32 = "res://bin/libgodot-python.windows.template_release.x86_32.dll"
-windows.debug.x86_64 = "res://bin/libgodot-python.windows.template_debug.x86_64.dll"
-windows.release.x86_64 = "res://bin/libgodot-python.windows.template_release.x86_64.dll"
+macos = "res://bin/macos/libgodot-python.macos.framework"
 
-#linux.x86_64 = "res://bin/libgodot-python.linux.template_debug.x86_64.so"
-#linux.x86_64 = "res://bin/libgodot-python.linux.template_release.x86_64.so"
+windows.x86_32 = "res://bin/windows-x86_32/libgodot-python.windows.x86_32.dll"
+windows.x86_64 = "res://bin/windows-x86_64/libgodot-python.windows.x86_64.dll"
 
-linux.debug.x86_64 = "res://bin/libgodot-python.linux.template_debug.x86_64.so"
-linux.release.x86_64 = "res://bin/libgodot-python.linux.template_release.x86_64.so"
+linux.x86_64 = "res://bin/linux-x86_64/libgodot-python.linux.x86_64.so"
+linux.arm64 = "res://bin/linux-arm64/libgodot-python.linux.arm64.so"
+linux.rv64 = "res://bin/linux-rv64/libgodot-python.linux.rv64.so"
 
-#linuxbsd.debug.x86_64 = "res://bin/libgodot-python.linux.template_debug.x86_64.so"
-#linuxbsd.release.x86_64 = "res://bin/libgodot-python.linux.template_release.x86_64.so"
-
-linux.debug.arm64 = "res://bin/libgodot-python.linux.template_debug.arm64.so"
-linux.release.arm64 = "res://bin/libgodot-python.linux.template_release.arm64.so"
-linux.debug.rv64 = "res://bin/libgodot-python.linux.template_debug.rv64.so"
-linux.release.rv64 = "res://bin/libgodot-python.linux.template_release.rv64.so"
-android.debug.x86_64 = "res://bin/libgodot-python.android.template_debug.x86_64.so"
-android.release.x86_64 = "res://bin/libgodot-python.android.template_release.x86_64.so"
-android.debug.arm64 = "res://bin/libgodot-python.android.template_debug.arm64.so"
-android.release.arm64 = "res://bin/libgodot-python.android.template_release.arm64.so"
-
-
-[icons]
-
-_PythonScript = "res://python-script.svg"
+android.x86_64 = "res://bin/android-x86_64/libgodot-python.android.x86_64.so"
+android.arm64 = "res://bin/android-arm64/libgodot-python.android.arm64.so"
 
