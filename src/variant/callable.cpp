@@ -9,7 +9,6 @@ void func_to_callable(GDExtensionUninitializedTypePtr ptr, py::function func) {
 	GDExtensionCallableCustomInfo info = {
 		.callable_userdata = func.ptr(),
 		.token = extension_interface::token,
-		.object = nullptr,
 
 		.call_func = [](void* userdata, const GDExtensionConstVariantPtr* args,
 			GDExtensionInt argument_count, GDExtensionVariantPtr res, GDExtensionCallError* error)
