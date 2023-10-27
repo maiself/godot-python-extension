@@ -45,6 +45,7 @@ public:
 	bool is_reference_counted() const;
 	size_t get_reference_count() const;
 
+	bool init_ref();
 	bool reference();
 	bool unreference();
 

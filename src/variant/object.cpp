@@ -2,6 +2,20 @@
 #include "util/call_deferred.h"
 
 
+/* TODO: add explanation to how this all works
+
+  • python reference counting <-> godot reference counting
+    ...
+
+  • python object <-> godot object initialization process
+    ...
+
+*/
+
+
+// TODO: some sort of debug / logging / tests
+
+
 namespace godot {
 
 
@@ -231,6 +245,21 @@ size_t Object::get_reference_count() const {
 	return res;
 }
 
+
+bool Object::init_ref() {
+	//static py::handle _init_ref = resolve_name("godot.RefCounted.init_ref"); // XXX
+	//return _init_ref(_handle).cast<bool>();
+
+	static auto* method_ptr = extension_interface::classdb_get_method_bind(
+		StringName("RefCounted"), StringName("init_ref"), 2240911060);
+
+	GDExtensionBool res;
+
+	extension_interface::object_method_bind_ptrcall(method_ptr, _ptr, nullptr, (GDExtensionTypePtr)&res);
+
+	return res;
+}
+
 bool Object::reference() {
 	//static py::handle _reference = resolve_name("godot.RefCounted.reference"); // XXX
 	//return _reference(_handle).cast<bool>();
@@ -299,7 +328,7 @@ py::object Object::get_bound_instance(GDExtensionObjectPtr obj) {
 	try {
 		_object_currently_binding = res;
 
-		py::object self = cls();
+		py::object self = cls(); // XXX: check reentrance, especially wrt _object_currently_binding
 
 		_object_currently_binding = nullptr;
 
@@ -367,7 +396,8 @@ void Object::def(py::module_& module_) {
 	py::function __init__ = cls.attr("__init__");
 	py::delattr(cls, "__init__");
 
-	cls.attr("__init__") = py::cpp_function([__init__](py::object& self) {
+	cls.attr("__init__") = py::cpp_function(
+		[__init__](py::object& self) {
 			if(self.is_none()) {
 				throw py::type_error("cannot init object None");
 			}
@@ -426,6 +456,8 @@ void Object::def(py::module_& module_) {
 					Py_REFCNT(self.ptr())
 					+ std::min<size_t>(self_object.get_reference_count(), 2) // XXX: godot implementation detail?
 				);
+
+				self_object.init_ref(); // XXX
 			}
 			else {
 				self.inc_ref(); // XXX: godot needs ref
