@@ -16,6 +16,71 @@
 // TODO: some sort of debug / logging / tests
 
 
+//#define REFCOUNT_DEBUG
+
+#ifndef REFCOUNT_DEBUG
+#define DEBUG_REFCOUNT_FUNC(obj, name, call_args, notes)
+#else
+
+#include <iostream>
+#include <pybind11/stl.h>
+
+#define DEBUG_REFCOUNT_FUNC(obj, name, call_args, notes) \
+	pygodot::object::refcount_debug::scoped_refcount_debug _scoped_refcount_debug(obj, name, \
+		std::make_tuple call_args, std::make_tuple notes);
+
+namespace pygodot::object::refcount_debug {
+	class scoped_refcount_debug {
+		static inline int call_level = 0;
+
+		template<typename Sep>
+		static void write_list(Sep&& sep) {
+		}
+
+		template<typename Sep, typename Arg, typename... Args>
+		static void write_list(Sep&& sep, Arg&& arg, Args&&... args) {
+			std::cout << std::forward<Arg>(arg);
+			((std::cout << std::forward<Sep>(sep) << std::forward<Args>(args)), ...);
+		}
+	public:
+		template<typename... CallArgs, typename... Notes>
+		scoped_refcount_debug(godot::Object* obj, const std::string& name,
+			std::tuple<CallArgs...> call_args, std::tuple<Notes...> notes)
+		{
+			for(int i = 0; i < call_level; i++) {
+				std::cout << "  ";
+			}
+			call_level++;
+
+			std::cout << name << "(";
+			std::apply(write_list<const char*, CallArgs...>, std::tuple_cat(std::make_tuple(", "), call_args));
+			std::cout << ")";
+
+			if(obj) {
+				std::cout << " ; obj = " << obj;
+			}
+
+			if(sizeof...(Notes)) {
+				std::cout << " ; ";
+			}
+			std::apply(write_list<const char*, Notes...>, std::tuple_cat(std::make_tuple(" ; "), notes));
+
+			if(obj && obj->is_reference_counted()) {
+				std::cout << " ; refcount = " << obj->get_reference_count();
+			}
+
+			std::cout << "\n";
+		}
+
+		~scoped_refcount_debug() {
+			call_level--;
+		}
+	};
+} // namespace pygodot::object::refcount_debug
+
+#endif
+
+
 namespace godot {
 
 
@@ -63,6 +128,8 @@ static Object* _object_currently_binding = nullptr;
 
 
 void Object::_free() {
+	DEBUG_REFCOUNT_FUNC(this, "Object::_free", (), ())
+
 	if(!Py_IsInitialized()) {
 		// XXX: singletons may still have bindings associated even after shutdown
 		return;
@@ -82,6 +149,8 @@ void Object::_free() {
 
 
 bool Object::_reference(bool reference) {
+	DEBUG_REFCOUNT_FUNC(this, "Object::_reference", (reference), ())
+
 	if(!_ptr) {
 		return true;
 	}
@@ -99,7 +168,11 @@ bool Object::_reference(bool reference) {
 	else {
 		// fast release for special case
 		if(Py_REFCNT(_handle.ptr()) == 2 && get_reference_count() == 1) {
+			DEBUG_REFCOUNT_FUNC(this, "call_deferred", ("..."), ("scheduled"))
+
 			call_deferred([this, obj = py::reinterpret_borrow<py::object>(_handle)]() mutable {
+				DEBUG_REFCOUNT_FUNC(this, "call_deferred", ("..."), ("called"))
+
 				py::gil_scoped_acquire gil;
 
 				if(_ptr && Py_REFCNT(_handle.ptr()) == 2 && get_reference_count() == 1) {
@@ -120,6 +193,8 @@ bool Object::_reference(bool reference) {
 
 
 int Object::_traverse(PyObject* self_base, visitproc visit, void* arg) {
+	DEBUG_REFCOUNT_FUNC(this, "Object::_traverse", (self_base, visit, arg), ())
+
 	if(!is_reference_counted()) {
 		return 0;
 	}
@@ -137,6 +212,8 @@ int Object::_traverse(PyObject* self_base, visitproc visit, void* arg) {
 
 
 void Object::_clear(PyObject* self_base) {
+	DEBUG_REFCOUNT_FUNC(this, "Object::_clear", (self_base), ())
+
 	if(is_reference_counted()) {
 		if(!_ptr) {
 			return;
@@ -150,6 +227,8 @@ void Object::_clear(PyObject* self_base) {
 
 
 void Object::_destroy() {
+	DEBUG_REFCOUNT_FUNC(this, "Object::_destroy", (), ())
+
 	if(!_ptr) {
 		return;
 	}
@@ -163,14 +242,16 @@ void Object::_destroy() {
 
 static GDExtensionInstanceBindingCallbacks _binding_callbacks = {
 	.create_callback = [](void* token, void* object) -> void* {
+		DEBUG_REFCOUNT_FUNC(nullptr, "create_callback", (token, object), ())
+
 		// only called for builtin classes
 		// called via object_get_instance_binding
-		auto* res = _ObjectAccessor::create(reinterpret_cast<GDExtensionObjectPtr>(object));
-
-		return res;
+		return _ObjectAccessor::create(reinterpret_cast<GDExtensionObjectPtr>(object));
 	},
 
 	.free_callback = [](void* token, void* object, void* binding) -> void {
+		DEBUG_REFCOUNT_FUNC(nullptr, "free_callback", (token, object, binding), ())
+
 		if(!binding) {
 			return;
 		}
@@ -179,6 +260,8 @@ static GDExtensionInstanceBindingCallbacks _binding_callbacks = {
 	},
 
 	.reference_callback = [](void* token, void* binding, GDExtensionBool reference) -> GDExtensionBool {
+		DEBUG_REFCOUNT_FUNC(nullptr, "reference_callback", (token, binding, (bool)reference), ())
+
 		if(!binding) {
 			return true;
 		}
@@ -189,10 +272,13 @@ static GDExtensionInstanceBindingCallbacks _binding_callbacks = {
 
 
 Object::Object(GDExtensionObjectPtr ptr) : _ptr(ptr) {
+	DEBUG_REFCOUNT_FUNC(this, "Object::Object", (ptr), ())
 }
 
 
 Object::Object(const py::str& class_name, const py::str& base_class_name) {
+	DEBUG_REFCOUNT_FUNC(this, "Object::Object", (class_name, base_class_name), ())
+
 	_ptr = extension_interface::classdb_construct_object(StringName(base_class_name));
 	if(!_ptr) {
 		throw std::runtime_error("unable to construct godot object of type " + std::string(base_class_name));
@@ -209,6 +295,8 @@ Object::Object(const py::str& class_name, const py::str& base_class_name) {
 
 
 Object::~Object() {
+	DEBUG_REFCOUNT_FUNC(this, "Object::~Object", (), ())
+
 	if(!Py_IsInitialized()) {
 		return;
 	}
@@ -232,6 +320,10 @@ bool Object::is_reference_counted() const {
 }
 
 size_t Object::get_reference_count() const {
+	if(!_ptr) {
+		return 0;
+	}
+
 	//static py::handle _get_reference_count = resolve_name("godot.RefCounted.get_reference_count"); // XXX
 	//return _get_reference_count(_handle).cast<size_t>();
 
@@ -247,6 +339,8 @@ size_t Object::get_reference_count() const {
 
 
 bool Object::init_ref() {
+	DEBUG_REFCOUNT_FUNC(this, "Object::init_ref", (), ())
+
 	//static py::handle _init_ref = resolve_name("godot.RefCounted.init_ref"); // XXX
 	//return _init_ref(_handle).cast<bool>();
 
@@ -261,6 +355,8 @@ bool Object::init_ref() {
 }
 
 bool Object::reference() {
+	DEBUG_REFCOUNT_FUNC(this, "Object::reference", (), ())
+
 	//static py::handle _reference = resolve_name("godot.RefCounted.reference"); // XXX
 	//return _reference(_handle).cast<bool>();
 
@@ -275,6 +371,8 @@ bool Object::reference() {
 }
 
 bool Object::unreference() {
+	DEBUG_REFCOUNT_FUNC(this, "Object::unreference", (), ())
+
 	//static py::handle _unreference = resolve_name("godot.RefCounted.unreference"); // XXX
 	//return _unreference(_handle).cast<bool>();
 
@@ -290,6 +388,8 @@ bool Object::unreference() {
 
 
 py::object Object::get_bound_instance(GDExtensionObjectPtr obj) {
+	DEBUG_REFCOUNT_FUNC(nullptr, "Object::get_bound_instance", (obj), ())
+
 	if(!obj) {
 		return py::none();
 	}
@@ -398,6 +498,8 @@ void Object::def(py::module_& module_) {
 
 	cls.attr("__init__") = py::cpp_function(
 		[__init__](py::object& self) {
+			DEBUG_REFCOUNT_FUNC(nullptr, "__init__", (self.ptr()), ())
+
 			if(self.is_none()) {
 				throw py::type_error("cannot init object None");
 			}
@@ -460,6 +562,8 @@ void Object::def(py::module_& module_) {
 				self_object.init_ref(); // XXX
 			}
 			else {
+				DEBUG_REFCOUNT_FUNC(&self_object, "__init__", (self.ptr()), ("not ref counted"))
+
 				self.inc_ref(); // XXX: godot needs ref
 			}
 		},
