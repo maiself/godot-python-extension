@@ -9,6 +9,7 @@
 #include "variant/traits.h"
 #include "variant/variant.h"
 #include "variant/object.h"
+#include "casting/cast_info.h"
 
 
 namespace pygodot {
@@ -62,6 +63,7 @@ private:
 
 	// source and dest types
 	GDExtensionVariantType variant_type;
+	bool is_derived_type = false;
 	py::handle python_type;
 
 	// container for any needed temp values
@@ -69,6 +71,8 @@ private:
 
 	// pointer to value to be written to and eventually placed into the object reference
 	GDExtensionTypePtr ptr = nullptr;
+
+	bool initialized;
 
 	cast_intermediate_t() = delete;
 	cast_intermediate_t(const cast_intermediate_t&) = delete;
@@ -91,16 +95,29 @@ private:
 
 public:
 	cast_intermediate_t(py::object& obj,
-			GDExtensionVariantType variant_type, py::handle python_type = nullptr)
-		: obj(obj), variant_type(variant_type), python_type(python_type)
+			GDExtensionVariantType variant_type, bool is_derived_type, py::handle python_type = nullptr)
+		: obj(obj), variant_type(variant_type), is_derived_type(is_derived_type)
+		, python_type(python_type)
 	{
 	}
 
 	~cast_intermediate_t() noexcept(false) {
 		// cast temp values back into the python object reference
 		with_variant_type(variant_type, [this]<VariantType Type>() {
-			if constexpr(is_in_type_list<Type, cast_temp_value_types> || std::is_same_v<Type, Object>) {
+			if constexpr(is_in_type_list<Type, cast_temp_value_types>) {
 				obj = make_copy(ptr, variant_type, python_type);
+			}
+			else if constexpr(std::is_same_v<Type, Object>) {
+				obj = make_copy(ptr, variant_type, python_type);
+
+				if(initialized && is_derived_type && !obj.is_none()) {
+					auto* obj_ptr = py::cast<Object*>(obj);
+					if(obj_ptr->is_reference_counted()) {
+						// refcount was incremented by writer of pointer
+						// decrement as we already have a reference
+						obj_ptr->unreference();
+					}
+				}
 			}
 			else if(python_type && !python_type.is_none()) {
 				obj = python_type(obj);
@@ -111,6 +128,8 @@ public:
 	// variant type
 
 	operator GDExtensionTypePtr() {
+		initialized = true;
+
 		return with_variant_type(variant_type, [this]<VariantType Type>() -> GDExtensionTypePtr {
 			if constexpr(is_in_type_list<Type, cast_temp_value_types>) {
 				ptr = reinterpret_cast<GDExtensionTypePtr>(
@@ -131,6 +150,8 @@ public:
 	}
 
 	operator GDExtensionUninitializedTypePtr() {
+		initialized = false;
+
 		return with_variant_type(variant_type, [this]<VariantType Type>()
 			-> GDExtensionUninitializedTypePtr
 		{
@@ -364,6 +385,8 @@ private:
 	py::handle python_type = nullptr;
 
 	GDExtensionVariantType variant_type;
+	bool is_derived_type = false;
+
 	bool initialized;
 
 	cast_intermediate_t() = delete;
@@ -402,10 +425,12 @@ public:
 	}
 
 	template<MaybeUninitializedVariantValuePointer Pointer_>
-	cast_intermediate_t(Pointer_ ptr, GDExtensionVariantType variant_type, py::handle python_type = nullptr)
+	cast_intermediate_t(Pointer_ ptr, GDExtensionVariantType variant_type, bool is_derived_type,
+			py::handle python_type = nullptr)
 		: ptr(reinterpret_cast<GDExtensionTypePtr>(ptr))
 		, python_type(python_type)
 		, variant_type(variant_type)
+		, is_derived_type(is_derived_type)
 		, initialized(InitializedPointer<Pointer_>)
 	{
 	}
@@ -422,6 +447,20 @@ public:
 				obj = Error.attr("FAILED");
 			}
 		}
+
+		if(variant_type == variant_type_to_enum_value<Object> && is_derived_type) {
+			if(initialized && !obj.is_none()) {
+				auto* obj_ptr = py::cast<Object*>(obj);
+
+				if(obj_ptr->is_reference_counted()) {
+					// object is refcounted and we are writing to a pointer that expects a refcounted object
+					// increment the refcount so that the otherside has a reference even if ours is lost
+					extension_interface::ref_set_object(reinterpret_cast<GDExtensionRefPtr>(ptr), *obj_ptr);
+					return reinterpret_cast<as_initialized_pointer_t<Pointer>>(ptr);
+				}
+			}
+		}
+
 		return make_copy(reinterpret_cast<Pointer>(ptr), obj, variant_type);
 	}
 
@@ -458,16 +497,15 @@ public:
 
 template<PythonObjectReferenceWrapper WrapperType>
 auto cast(WrapperType obj,
-	GDExtensionVariantType variant_type, py::handle python_type)
+	GDExtensionVariantType variant_type, bool is_derived_type, py::handle python_type)
 {
-	return cast_intermediate_t<WrapperType>(obj, variant_type, python_type);
+	return cast_intermediate_t<WrapperType>(obj, variant_type, is_derived_type, python_type);
 }
 
 template<PythonObjectReferenceWrapper WrapperType>
-auto cast(WrapperType obj,
-	std::pair<GDExtensionVariantType, py::handle> type)
+auto cast(WrapperType obj, const cast_info_t& type)
 {
-	return cast_intermediate_t<WrapperType>(obj, type.first, type.second);
+	return cast_intermediate_t<WrapperType>(obj, type.variant_type, type.is_derived_type, type.python_type);
 }
 
 
@@ -488,12 +526,14 @@ auto cast(Pointer ptr) {
 }
 
 template<MaybeUninitializedVariantValuePointer Pointer>
-auto cast(Pointer ptr, GDExtensionVariantType variant_type) {
+auto cast(Pointer ptr, GDExtensionVariantType variant_type, bool is_derived_type) {
 	if constexpr(is_element_const_v<Pointer>) {
-		return py::object(cast_intermediate_t<Pointer>(const_cast<remove_element_const_t<Pointer>>(ptr), variant_type));
+		return py::object(cast_intermediate_t<Pointer>(const_cast<remove_element_const_t<Pointer>>(ptr),
+			variant_type, is_derived_type));
 	}
 	else {
-		return cast_intermediate_t<Pointer>(const_cast<remove_element_const_t<Pointer>>(ptr), variant_type);
+		return cast_intermediate_t<Pointer>(const_cast<remove_element_const_t<Pointer>>(ptr),
+			variant_type, is_derived_type);
 	}
 }
 
@@ -507,15 +547,15 @@ py::object cast(Pointer ptr,
 
 template<VariantValuePointer Pointer>
 auto cast(Pointer ptr,
-	std::pair<GDExtensionVariantType, py::handle> type)
+	const cast_info_t& type)
 {
 	if constexpr(is_element_const_v<Pointer>) {
 		return py::object(cast_intermediate_t<Pointer>(const_cast<remove_element_const_t<Pointer>>(ptr),
-			type.first, type.second));
+			type.variant_type, type.is_derived_type, type.python_type));
 	}
 	else {
 		return cast_intermediate_t<Pointer>(const_cast<remove_element_const_t<Pointer>>(ptr),
-			type.first, type.second);
+			type.variant_type, type.is_derived_type, type.python_type);
 	}
 }
 

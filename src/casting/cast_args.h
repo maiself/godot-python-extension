@@ -45,9 +45,9 @@ struct cast_t<T> {
 template<VariantValuePointerArgs T>
 struct cast_t<T> {
 	T args;
-	std::span<const variant_type_ptr_to_python_obj_cast_info_t> cast_types;
+	std::span<const cast_info_t> cast_types;
 
-	cast_t(T args, std::span<const variant_type_ptr_to_python_obj_cast_info_t> cast_types)
+	cast_t(T args, std::span<const cast_info_t> cast_types)
 		: args(args)
 		, cast_types(cast_types)
 	{
@@ -81,7 +81,7 @@ struct cast_t<T> {
 	stable_vector<arg_cast_t> cast_args;
 	stable_vector<GDExtensionConstTypePtr> value_pointers;
 
-	cast_t(T& args, std::span<const variant_type_ptr_to_python_obj_cast_info_t> variant_types)
+	cast_t(T& args, std::span<const cast_info_t> variant_types)
 		: cast_args(variant_types.size()), value_pointers(variant_types.size())
 	{
 		if(args.size() != variant_types.size()) {
@@ -91,7 +91,7 @@ struct cast_t<T> {
 		const auto* variant_type = variant_types.data();
 
 		for(auto& arg : args) {
-			value_pointers.emplace_back() = cast_args.emplace_back(arg, (variant_type++)->first);
+			value_pointers.emplace_back() = cast_args.emplace_back(arg, (variant_type++)->variant_type);
 		}
 	}
 

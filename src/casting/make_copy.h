@@ -86,7 +86,7 @@ py::object make_copy(Pointer ptr, GDExtensionVariantType variant_type, py::handl
 			if(!constructor) {
 				throw std::runtime_error("invalid variant constructor");
 			}
-			constructor(cast(std::ref(obj), variant_type, python_type), const_cast<Type&>(val)); // XXX
+			constructor(cast(std::ref(obj), variant_type, false, python_type), const_cast<Type&>(val)); // XXX
 			return obj;
 		}
 

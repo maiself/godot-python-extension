@@ -57,7 +57,7 @@ void call_virtual(size_t index,
 		try {
 			func = py::type::handle_of(self).attr(func.attr("__name__")); // XXX: need this for reloaded...
 
-			cast(ret, get_return_cast_info(method_info).first) // XXX
+			cast(ret, get_return_cast_info(method_info)) // XXX
 				= func(self, *cast(args, get_arguments_cast_info(method_info)));
 		}
 		catch(...) {

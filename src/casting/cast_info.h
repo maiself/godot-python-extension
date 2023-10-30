@@ -11,22 +11,29 @@
 namespace pygodot {
 
 
-using variant_ptr_to_python_obj_cast_info_t = py::handle;
-using variant_type_ptr_to_python_obj_cast_info_t = std::pair<GDExtensionVariantType, py::handle>;
+struct cast_info_t {
+	GDExtensionVariantType variant_type;
+	py::handle python_type;
+	bool is_derived_type;
+};
 
 
 inline auto get_cast_info(const std::optional<PyGDExtensionPropertyInfo>& property_info) {
-	variant_type_ptr_to_python_obj_cast_info_t info;
+	cast_info_t info;
 
 	if(!property_info) {
-		info.first = GDEXTENSION_VARIANT_TYPE_NIL;
+		info.variant_type = GDEXTENSION_VARIANT_TYPE_NIL;
 		return info;
 	}
 
-	info.first = property_info->type;
+	info.variant_type = property_info->type;
 
 	if(property_info->python_type && !property_info->python_type.is_none()) {
-		info.second = property_info->python_type;
+		info.python_type = property_info->python_type;
+	}
+
+	if(property_info->type == GDEXTENSION_VARIANT_TYPE_OBJECT) {
+		info.is_derived_type = (std::string(property_info->class_name) != "Object");
 	}
 
 	return info;
@@ -34,7 +41,7 @@ inline auto get_cast_info(const std::optional<PyGDExtensionPropertyInfo>& proper
 
 
 inline auto get_arguments_cast_info(const PyGDExtensionClassMethodInfo& method_info) {
-	std::vector<variant_type_ptr_to_python_obj_cast_info_t> info;
+	std::vector<cast_info_t> info;
 
 	for(const auto& argument_info : method_info.arguments_info) {
 		info.emplace_back(get_cast_info(argument_info));

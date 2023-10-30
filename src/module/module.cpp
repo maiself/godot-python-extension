@@ -63,7 +63,7 @@ py::object variant_get_ptr_indexed_getter(GDExtensionVariantType type, GDExtensi
 		{
 			py::object ret;
 			indexed_getter(cast(self, type), index,
-				cast(std::ref(ret), return_value_type, nullptr)); // XXX: cast info
+				cast(std::ref(ret), return_value_type, false, nullptr)); // XXX: cast info
 			return ret;
 		},
 		py::is_method(variant_type_handle(type)),
@@ -107,7 +107,7 @@ py::object variant_get_ptr_keyed_getter(GDExtensionVariantType type, GDExtension
 		{
 			py::object ret;
 			keyed_getter(cast(self, type), cast(key, key_type),
-				cast(std::ref(ret), return_value_type, nullptr)); // XXX: cast info
+				cast(std::ref(ret), return_value_type, false, nullptr)); // XXX: cast info
 			return ret;
 		},
 		py::is_method(variant_type_handle(type)),
@@ -159,7 +159,7 @@ py::object variant_get_ptr_getter(GDExtensionVariantType type, const StringName&
 			-> py::object
 		{
 			py::object ret;
-			getter(cast(self, type), cast(std::ref(ret), member_type, nullptr)); // XXX: cast info
+			getter(cast(self, type), cast(std::ref(ret), member_type, false, nullptr)); // XXX: cast info
 			return ret;
 		},
 		py::is_method(variant_type_handle(type)),
@@ -209,7 +209,7 @@ py::object variant_get_ptr_operator_evaluator(GDExtensionVariantOperator operato
 		{
 			py::object ret;
 			eval(cast(obj_a, type_a), cast(obj_b, type_b),
-				cast(std::ref(ret), return_type, nullptr)); // XXX: cast info
+				cast(std::ref(ret), return_type, false, nullptr)); // XXX: cast info
 			return ret;
 		},
 		py::name("eval") // TODO: name
@@ -248,7 +248,7 @@ py::object variant_get_ptr_builtin_method(
 				GDExtensionCallError error;
 				py::object ret;
 				extension_interface::variant_call(cast(self, variant_type_to_enum_value<Variant>), StringName(*name), cast(args), args.size(),
-					cast(std::ref(ret), variant_type_to_enum_value<Variant>, nullptr), &error);
+					cast(std::ref(ret), variant_type_to_enum_value<Variant>, false, nullptr), &error);
 				return ret;
 			},
 			py::is_method(variant_type_handle(type)),
