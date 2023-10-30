@@ -18,6 +18,46 @@
 
 //#define REFCOUNT_DEBUG
 
+
+namespace godot {
+
+namespace py = pybind11;
+
+
+class _ObjectAccessor {
+	Object& obj;
+
+public:
+	static Object* create(GDExtensionObjectPtr ptr) {
+		return new Object(ptr);
+	}
+
+	_ObjectAccessor(Object& obj) : obj(obj) {}
+
+	void free() {
+		obj._free();
+	}
+
+	bool reference(bool reference) {
+		return obj._reference(reference);
+	}
+
+	int traverse(PyObject* self_base, visitproc visit, void* arg) {
+		return obj._traverse(self_base, visit, arg);
+	}
+
+	void clear(PyObject* self_base) {
+		obj._clear(self_base);
+	}
+
+	py::handle handle() {
+		return obj._handle;
+	}
+};
+
+} // namespace godot
+
+
 #ifndef REFCOUNT_DEBUG
 #define DEBUG_REFCOUNT_FUNC(obj, name, call_args, notes)
 #else
@@ -65,8 +105,12 @@ namespace pygodot::object::refcount_debug {
 			}
 			std::apply(write_list<const char*, Notes...>, std::tuple_cat(std::make_tuple(" ; "), notes));
 
+			if(obj && _ObjectAccessor(*obj).handle().ptr()) {
+				std::cout << " ; py refs = " << Py_REFCNT(_ObjectAccessor(*obj).handle().ptr());
+			}
+
 			if(obj && obj->is_reference_counted()) {
-				std::cout << " ; refcount = " << obj->get_reference_count();
+				std::cout << " ; gd refs = " << obj->get_reference_count();
 			}
 
 			std::cout << "\n";
@@ -82,41 +126,6 @@ namespace pygodot::object::refcount_debug {
 
 
 namespace godot {
-
-
-namespace py = pybind11;
-
-
-class _ObjectAccessor {
-	Object& obj;
-
-public:
-	static Object* create(GDExtensionObjectPtr ptr) {
-		return new Object(ptr);
-	}
-
-	_ObjectAccessor(Object& obj) : obj(obj) {}
-
-	void free() {
-		obj._free();
-	}
-
-	bool reference(bool reference) {
-		return obj._reference(reference);
-	}
-
-	int traverse(PyObject* self_base, visitproc visit, void* arg) {
-		return obj._traverse(self_base, visit, arg);
-	}
-
-	void clear(PyObject* self_base) {
-		obj._clear(self_base);
-	}
-
-	py::handle handle() {
-		return obj._handle;
-	}
-};
 
 
 /*Object::Object() : VariantTypeBase(uninitialized) {
@@ -571,7 +580,7 @@ void Object::def(py::module_& module_) {
 					+ std::min<size_t>(self_object.get_reference_count(), 2) // XXX: godot implementation detail?
 				);
 
-				self_object.init_ref(); // XXX
+				self_object.init_ref();
 			}
 			else {
 				DEBUG_REFCOUNT_FUNC(&self_object, "__init__", (self.ptr()), ("not ref counted"))
