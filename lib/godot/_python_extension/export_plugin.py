@@ -71,7 +71,7 @@ class PythonExportPlugin(godot.EditorExportPlugin):
 	def _get_name(self) -> str:
 		return type(self).__name__
 
-	def _export_begin(self, features: list[str], is_debug: bool, path: str, flags: int):
+	def _export_begin(self, features: list[str], is_debug: bool, export_path: str, flags: int):
 		platform = _get_platform_from_features(features)
 		arch = _get_arch_from_features(features)
 
@@ -82,20 +82,20 @@ class PythonExportPlugin(godot.EditorExportPlugin):
 		shared_objects = set()
 		files = set()
 
-		for path_ in platform_dir.glob('**/*'):
-			if not path_.is_file():
+		for path in platform_dir.glob('**/*'):
+			if not path.is_file():
 				continue
-			if platform_so_suffix in path_.suffixes:
-				shared_objects.add(path_)
+			if platform_so_suffix in path.suffixes and 'lib-dynload' not in path.parts:
+				shared_objects.add(path)
 			else:
-				files.add(path_)
+				files.add(path)
 
 		for shared_object in shared_objects:
 			if shared_object == platform_lib:
 				continue
 			self.add_shared_object(str(shared_object), [], '')
 
-		target_dir = pathlib.Path(path).parent / 'lib' / f'{platform}-{arch}'
+		target_dir = pathlib.Path(export_path).parent / 'lib' / f'{platform}-{arch}'
 
 		for file in files:
 			dir_ = target_dir / file.parent.relative_to(platform_dir)
