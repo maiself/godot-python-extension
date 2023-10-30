@@ -149,9 +149,26 @@ static bool init_python_isolated() {
 
 	set_string(config.program_name, "program_name", runtime_config.program_name);
 
-	// TODO: enable common module search paths next to the extension
-	//set_string(config.platlibdir, "platlibdir", ".");
-	//config.module_search_paths_set = 1;
+	auto add_module_search_path = [&](const std::string& path) {
+		wchar_t* wpath = Py_DecodeLocale(path.data(), nullptr);
+		PyWideStringList_Append(&config.module_search_paths, wpath);
+		PyMem_RawFree(wpath);
+		check_status("python initialization, adding module search path");
+	};
+
+	auto py_major = std::to_string(PY_MAJOR_VERSION);
+	auto py_minor = std::to_string(PY_MINOR_VERSION);
+	auto py_version = py_major + "." + py_minor;
+	auto py_version_no_dot = py_major + py_minor;
+	auto python_zip_name = "python" + py_version_no_dot + ".zip";
+	auto python_lib_name = "python" + py_version;
+
+	add_module_search_path((runtime_config.python_home_path / python_zip_name).string());
+	add_module_search_path((runtime_config.python_home_path / python_lib_name).string());
+	add_module_search_path((runtime_config.python_home_path / python_lib_name / "lib-dynload").string());
+	add_module_search_path((runtime_config.python_home_path / python_lib_name / "site-packages").string());
+
+	config.module_search_paths_set = 1;
 
 	if(runtime_config.argv.size()) {
 		std::vector<char*> arg_ptrs;
