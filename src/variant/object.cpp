@@ -170,18 +170,20 @@ bool Object::_reference(bool reference) {
 		if(Py_REFCNT(_handle.ptr()) == 2 && get_reference_count() == 1) {
 			DEBUG_REFCOUNT_FUNC(this, "call_deferred", ("..."), ("scheduled"))
 
-			call_deferred([this, obj = py::reinterpret_borrow<py::object>(_handle)]() mutable {
+			_deferred_release = &call_deferred([this]() mutable {
 				DEBUG_REFCOUNT_FUNC(this, "call_deferred", ("..."), ("called"))
 
 				py::gil_scoped_acquire gil;
 
-				if(_ptr && Py_REFCNT(_handle.ptr()) == 2 && get_reference_count() == 1) {
+				_deferred_release = nullptr;
+
+				if(_ptr && Py_REFCNT(_handle.ptr()) == 1 && get_reference_count() == 1) {
+					py::object obj = py::reinterpret_borrow<py::object>(_handle);
+
 					if(unreference()) {
 						_destroy();
 					}
 				}
-
-				obj = py::object();
 			});
 		}
 
@@ -217,6 +219,11 @@ void Object::_clear(PyObject* self_base) {
 	if(is_reference_counted()) {
 		if(!_ptr) {
 			return;
+		}
+
+		if(_deferred_release) {
+			_deferred_release->cancel();
+			_deferred_release = nullptr;
 		}
 
 		if(unreference()) {
@@ -303,6 +310,11 @@ Object::~Object() {
 
 	if(is_reference_counted()) {
 		_ptr = nullptr;
+
+		if(_deferred_release) {
+			_deferred_release->cancel();
+			_deferred_release = nullptr;
+		}
 	}
 	else {
 		_destroy();

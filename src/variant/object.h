@@ -5,6 +5,7 @@
 #include "extension/extension.h"
 #include "variant/variant_base.h"
 #include "variant/string_name.h"
+#include "util/call_deferred.h"
 
 
 namespace godot {
@@ -17,6 +18,8 @@ class Object {
 private:
 	GDExtensionObjectPtr _ptr = nullptr;
 	py::handle _handle = nullptr;
+
+	deferred_call_t* _deferred_release = nullptr;
 
 	bool _is_reference_counted = false;
 
