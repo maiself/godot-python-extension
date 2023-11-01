@@ -60,48 +60,47 @@ add_platform_config(
 )
 
 
-def fetch_python_for_platform(platform: str, arch: str):
+def fetch_python_for_platform(platform: str, arch: str, dest_dir: pathlib.Path):
 	config = platform_configs[(platform, arch)]
 
 	print(f'fetching python for {config.name}')
 	print(f'  {config.source_url}')
 
 	with urllib.request.urlopen(config.source_url) as response:
-		with (pathlib.Path() / pathlib.Path(config.source_url).name).open('wb') as dest:
+		with (dest_dir / pathlib.Path(config.source_url).name).open('wb') as dest:
 			shutil.copyfileobj(response, dest)
 
 
-def prepare_for_platform(platform: str, arch: str, dest: pathlib.Path) -> pathlib.Path:
+def prepare_for_platform(platform: str, arch: str,
+		src_dir: pathlib.Path, dest_dir: pathlib.Path) -> pathlib.Path:
 	config = platform_configs[(platform, arch)]
 
 	print(f'preparing for {config.name}')
 
-	shutil.unpack_archive(pathlib.Path(config.source_url).name)
+	shutil.unpack_archive(src_dir / pathlib.Path(config.source_url).name, extract_dir = src_dir)
 
-	src = pathlib.Path().resolve() / 'python'
+	src = src_dir / 'python'
 
-	dest.mkdir(parents=True, exist_ok=True)
+	dest_dir.mkdir(parents=True, exist_ok=True)
 
-	shutil.copy2(src / config.so_path, dest)
-	subprocess.run(['strip', '-s', str(dest / pathlib.Path(config.so_path).name)], check=True)
+	shutil.copy2(src / config.so_path, dest_dir)
+	subprocess.run(['strip', '-s', str(dest_dir / pathlib.Path(config.so_path).name)], check=True)
 
 	if (src / config.python_ext_dir).exists():
-		dest_ext_dir = dest / 'python3.12' / 'lib-dynload'
+		dest_ext_dir = dest_dir / 'python3.12' / 'lib-dynload'
 		dest_ext_dir.mkdir(parents=True, exist_ok=True)
 
 		for path in (src / config.python_ext_dir).iterdir():
 			if any(suffix in path.suffixes for suffix in config.ext_suffixes):
 				shutil.copy2(path, dest_ext_dir)
 
-	with contextlib.chdir(src / config.python_lib_dir):
-		subprocess.run(['zip', '-q', '-r', str(dest / 'python312.zip'),
-			*(str(file) for file in pathlib.Path().iterdir())])
+	shutil.make_archive(dest_dir / 'python312', 'zip', root_dir=src / config.python_lib_dir, base_dir='')
 
 
-def get_python_for_platform(platform: str, arch: str) -> pathlib.Path:
+def get_python_for_platform(platform: str, arch: str, src_dir: pathlib.Path) -> pathlib.Path:
 	config = platform_configs[(platform, arch)]
 
-	src = pathlib.Path().resolve() / 'python'
+	src = src_dir / 'python'
 
 	return src / config.executable
 

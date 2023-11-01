@@ -208,7 +208,7 @@ sources.append(os.fspath(generated_path / 'godot_module_archive.cpp'))
 if env.get('single_source', False):
 	single_source_path = (generated_path / 'single_source.cpp')
 	single_source_path.write_text(
-		'\n'.join(f'#include "{source.removeprefix("src/")}"' for source in sources) + '\n')
+		'\n'.join(f'#include "{pathlib.Path(source).relative_to("src")}"' for source in sources) + '\n')
 
 	sources[:] = [os.fspath(single_source_path)]
 
@@ -283,9 +283,7 @@ prepared_python_config = prepare_python.platform_configs[(env['platform'], env['
 def _fetch_python(target, source, env):
 	dest = pathlib.Path(target[0].path).parent
 	dest.mkdir(parents=True, exist_ok=True)
-
-	with contextlib.chdir(dest):
-		prepare_python.fetch_python_for_platform(env['platform'], env['arch'])
+	prepare_python.fetch_python_for_platform(env['platform'], env['arch'], dest)
 
 fetch_python_alias = env.Alias("fetch_python", [
 	Builder(action = env.Action(_fetch_python, "Fetching Python"))(
@@ -302,10 +300,10 @@ def _prepare_python(target, source, env):
 	dest = pathlib.Path(target[0].path).parent.resolve()
 	dest.mkdir(parents=True, exist_ok=True)
 
-	src = pathlib.Path(source[0].path).parent
+	src = pathlib.Path(source[0].path).parent.resolve()
 
-	with contextlib.chdir(src):
-		env['python'] = prepare_python.prepare_for_platform(env['platform'], env['arch'], dest)
+	env['python'] = prepare_python.prepare_for_platform(env['platform'], env['arch'],
+		src_dir = src, dest_dir = dest)
 
 prepare_python_alias = env.Alias("prepare_python", [
 	Builder(action = Action(_prepare_python, "Preparing Python"))(
@@ -342,8 +340,8 @@ env.Prepend(CPPPATH=['src', os.fspath(generated_path), 'extern/pybind11/include'
 
 
 def _append_python_config(env, target, **kwargs):
-	with contextlib.chdir(generated_path / 'python' / prepared_python_config.name):
-		env['python'] = os.fspath(prepare_python.get_python_for_platform(env['platform'], env['arch']))
+	src_dir = generated_path / 'python' / prepared_python_config.name
+	env['python'] = os.fspath(prepare_python.get_python_for_platform(env['platform'], env['arch'], src_dir))
 
 	from tools.build import python_config
 	_config_vars = python_config.get_python_config_vars(env)
