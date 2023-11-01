@@ -7,6 +7,7 @@ This file is partially derived from [godotengine/godot-cpp](https://github.com/g
 import sys
 import os
 import pathlib
+import contextlib
 
 from SCons.Errors import UserError
 
@@ -240,7 +241,7 @@ python_sources.discard(pathlib.Path('lib/godot/_internal/extension_api.json'))
 
 
 # filter
-sources = [os.fspath(path) for path in sources if '.generated' not in path.parts]
+sources = [os.fspath(path) for path in sorted(sources) if '.generated' not in path.parts]
 python_sources = [os.fspath(path) for path in sorted(python_sources)]
 
 # add back after filtering
@@ -325,6 +326,51 @@ env.Alias("godot_module_archive", [
 ])
 
 
+from tools.build import prepare_python
+
+prepared_python_config = prepare_python.platform_configs[(env['platform'], env['arch'])]
+
+
+def _fetch_python(target, source, env):
+	dest = pathlib.Path(target[0].path).parent
+	dest.mkdir(parents=True, exist_ok=True)
+
+	with contextlib.chdir(dest):
+		prepare_python.fetch_python_for_platform(env['platform'], env['arch'])
+
+fetch_python_alias = env.Alias("fetch_python", [
+	Builder(action = env.Action(_fetch_python, "Fetching Python"))(
+		env,
+		target = os.fspath(generated_path / 'python'
+			/ prepared_python_config.name / pathlib.Path(prepared_python_config.source_url).name),
+		source = [
+		],
+	)
+])
+
+
+def _prepare_python(target, source, env):
+	dest = pathlib.Path(target[0].path).parent.resolve()
+	dest.mkdir(parents=True, exist_ok=True)
+
+	src = pathlib.Path(source[0].path).parent
+
+	with contextlib.chdir(src):
+		env['python'] = prepare_python.prepare_for_platform(env['platform'], env['arch'], dest)
+
+prepare_python_alias = env.Alias("prepare_python", [
+	Builder(action = Action(_prepare_python, "Preparing Python"))(
+		env,
+		target = f'bin/{prepared_python_config.name}/python312.zip', # XXX: version
+		source = [
+			fetch_python_alias[0].children(),
+			prepare_python.__file__,
+		],
+	)
+])
+
+
+
 # TODO: build python
 # TODO: freeze standard library
 
@@ -338,23 +384,39 @@ env.Append(CCFLAGS = ['-fvisibility=hidden', *['-flto'] * with_lto]) # XXX
 env.Append(LINKFLAGS = ['-fvisibility=hidden', *['-flto'] * with_lto, *['-s'] * strip]) # XXX
 
 
-from tools.build import python_config
-_config_vars = python_config.get_python_config_vars(env)
-
-env.Append(LINKFLAGS = _config_vars.link_flags)
-env.Append(LIBS = _config_vars.link_libs)
-env.Append(CPPPATH = _config_vars.include_flags)
-
-
 if env['platform'] == 'windows':
 	# linker has trouble if the table is too large
 	env.Append(CPPDEFINES = ['CLASS_VIRTUAL_CALL_TABLE_SIZE=512'])
 
-else:
-	env.Append(CPPDEFINES = [f'PYTHON_LIBRARY_PATH=\\"{_config_vars.ldlibrary or ""}\\"'])
-
 
 env.Prepend(CPPPATH=['src', os.fspath(generated_path), 'extern/pybind11/include'])
+
+
+def _append_python_config(env, target, **kwargs):
+	with contextlib.chdir(generated_path / 'python' / prepared_python_config.name):
+		env['python'] = os.fspath(prepare_python.get_python_for_platform(env['platform'], env['arch']))
+
+	from tools.build import python_config
+	_config_vars = python_config.get_python_config_vars(env)
+
+	env.Append(LINKFLAGS = _config_vars.link_flags)
+	env.Append(LIBS = _config_vars.link_libs)
+	env.Append(CPPPATH = _config_vars.include_flags)
+
+	if env['platform'] != 'windows':
+		env.Append(CPPDEFINES = [f'PYTHON_LIBRARY_PATH=\\"{_config_vars.ldlibrary or ""}\\"'])
+
+	dest = pathlib.Path(target[0].path)
+	dest.write_text(repr(_config_vars))
+
+
+append_python_config = Builder(action = Action(_append_python_config, None))(
+	env, target='src/.generated/.append_python_config', source=None)
+
+env.Depends(append_python_config, prepare_python_alias)
+env.AlwaysBuild(append_python_config)
+
+env.Depends(sources, append_python_config)
 
 
 # library name
