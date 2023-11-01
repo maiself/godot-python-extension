@@ -19,6 +19,49 @@ header_path = project_dir / 'src' / '.generated' / 'gdextension_api_table.h' # X
 # float_32 float_64 double_32 double_64
 build_configuration = 'float_64' # XXX: add support for other build confguations
 
+# float_64
+_variant_sizes = dict(
+	Nil = 0,
+	bool = 1,
+	int = 8,
+	float = 8,
+	String = 8,
+	Vector2 = 8,
+	Vector2i = 8,
+	Rect2 = 16,
+	Rect2i = 16,
+	Vector3 = 12,
+	Vector3i = 12,
+	Transform2D = 24,
+	Vector4 = 16,
+	Vector4i = 16,
+	Plane = 16,
+	Quaternion = 16,
+	AABB = 24,
+	Basis = 36,
+	Transform3D = 48,
+	Projection = 64,
+	Color = 16,
+	StringName = 8,
+	NodePath = 8,
+	RID = 8,
+	Object = 8,
+	Callable = 16,
+	Signal = 16,
+	Dictionary = 8,
+	Array = 8,
+	PackedByteArray = 16,
+	PackedInt32Array = 16,
+	PackedInt64Array = 16,
+	PackedFloat32Array = 16,
+	PackedFloat64Array = 16,
+	PackedStringArray = 16,
+	PackedVector2Array = 16,
+	PackedVector3Array = 16,
+	PackedColorArray = 16,
+	Variant = 24,
+)
+
 
 def import_path_as(path: pathlib.Path, module_name: str, *, level: int = 0):
 	import importlib.util
@@ -70,24 +113,25 @@ def main():
 
 	print(f'generating {header_path.relative_to(project_dir)}')
 
-	import_path_as(api_info_path, 'api_info')
+	#import_path_as(api_info_path, 'api_info')
 
-	api = api_info.api
+	#api = api_info.api
 
-	build_config_info = api.builtin_class_sizes.get(
-		build_configuration, key='build_configuration', default=api_info.raise_not_found)
+	#build_config_info = api.builtin_class_sizes.get(
+	#	build_configuration, key='build_configuration', default=api_info.raise_not_found)
 
 	variant_types_info = {}
 
-	for size_info in build_config_info.sizes:
+	#for size_info in build_config_info.sizes:
+	for name, size in _variant_sizes.items():
 		#print(size_info)
-		if size_info.name == 'Variant':
-			variant_types_info['Nil'].size = size_info.size
+		if name == 'Variant':
+			variant_types_info['Nil'].size = size
 			continue
 
-		variant_type_info = VariantTypeInfo(name = size_info.name, size = size_info.size,
-			enum_value_name = get_variant_enum_value_name(size_info.name))
-		variant_types_info[size_info.name] = variant_type_info
+		variant_type_info = VariantTypeInfo(name = name, size = size,
+			enum_value_name = get_variant_enum_value_name(name))
+		variant_types_info[name] = variant_type_info
 
 	data = gdextension_interface_path.read_text()
 
