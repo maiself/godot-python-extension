@@ -3,6 +3,7 @@ import os
 import pathlib
 import types
 import re
+import itertools
 
 
 from . import build_utils
@@ -99,19 +100,19 @@ def get_python_config_vars(env) -> types.SimpleNamespace:
 
 	config_vars.link_flags = _stable_unique([
 			*[f'-L{normpath(sysconfig_vars.get("LIBDIR"))}'] * bool(sysconfig_vars.get("LIBDIR")),
-			*(
-				value
+			*itertools.chain(*(
+				value.split()
 				for name in ('LIBS', 'SYSLIBS')
 				if (value := sysconfig_vars.get(name))
-			),
+			)),
 		])
 
 	config_vars.link_libs = _stable_unique([
-			*(
-				value.removeprefix('-l')
+			*itertools.chain(*(
+				(v.removeprefix('-l') for v in value.split())
 				for name in ('LIBS', 'SYSLIBS')
 				if (value := sysconfig_vars.get(name))
-			),
+			)),
 			python_lib,
 		])
 
