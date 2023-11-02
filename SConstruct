@@ -328,8 +328,13 @@ prepare_python_alias = env.Alias("prepare_python", [
 with_lto = env.get('with_lto', False)
 strip = env.get('strip', False)
 
-env.Append(CCFLAGS = ['-fvisibility=hidden', *['-flto'] * with_lto]) # XXX
-env.Append(LINKFLAGS = ['-fvisibility=hidden', *['-flto'] * with_lto, *['-s'] * strip]) # XXX
+
+if not env.get('is_msvc'):
+	env.Append(CCFLAGS = ['-fvisibility=hidden', *['-flto'] * with_lto]) # XXX
+	env.Append(LINKFLAGS = ['-fvisibility=hidden', *['-flto'] * with_lto, *['-s'] * strip]) # XXX
+
+else:
+	env.Append(LIBS = ['Shell32.lib', ])
 
 
 if env['platform'] == 'windows':
