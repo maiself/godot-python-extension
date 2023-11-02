@@ -131,7 +131,7 @@ PyGDExtensionClassMethodInfo::operator GDExtensionClassMethodInfo() {
 			cast(res, get_return_cast_info(method_info)) = py::object(); // XXX
 		},
 
-		.method_flags = method_flags,
+		.method_flags = static_cast<uint32_t>(method_flags),
 
 		.has_return_value = return_value_info.has_value(),
 		.return_value_info = &_cached_data->method_return_value_info,
