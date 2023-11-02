@@ -75,15 +75,15 @@ std::string format_exception(const Exception& exception, Notes&&... notes) {
 
 
 #define CATCH_EXCEPTIONS_AND_PRINT_ERRORS(...) \
-	CATCH_EXCEPTIONS_AND_PRINT_ERRORS_THEN({}, __VA_ARGS__)
+	CATCH_EXCEPTIONS_AND_PRINT_ERRORS_THEN({} __VA_OPT__(,) __VA_ARGS__)
 
 
 #define CATCH_FATAL_EXCEPTIONS_PRINT_ERRORS_AND_CRASH(...) \
-	CATCH_EXCEPTIONS_AND_PRINT_ERRORS_THEN({ std::fflush(stdout); GENERATE_TRAP(); }, __VA_ARGS__)
+	CATCH_EXCEPTIONS_AND_PRINT_ERRORS_THEN({ std::fflush(stdout); GENERATE_TRAP(); } __VA_OPT__(,) __VA_ARGS__)
 
 
 #define CATCH_FATAL_EXCEPTIONS_PRINT_ERRORS_AND_ABORT(...) \
-	CATCH_EXCEPTIONS_AND_PRINT_ERRORS_THEN({ std::fflush(stdout); std::abort(); }, __VA_ARGS__)
+	CATCH_EXCEPTIONS_AND_PRINT_ERRORS_THEN({ std::fflush(stdout); std::abort(); } __VA_OPT__(,) __VA_ARGS__)
 
 
 std::string get_fully_qualified_name(py::handle obj);

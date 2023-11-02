@@ -165,6 +165,7 @@ print("Building for architecture " + env["arch"] + " on platform " + env["platfo
 # Require C++20
 if env.get("is_msvc", False):
 	env.Append(CXXFLAGS=["/std:c++20"])
+	env.Append(CXXFLAGS=["/Zc:preprocessor"])
 	env.Append(CCFLAGS=["/EHsc"])
 else:
 	env.Append(CXXFLAGS=["-std=c++20"])
