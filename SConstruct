@@ -346,6 +346,7 @@ def _append_python_config(env, target, **kwargs):
 	from tools.build import python_config
 	_config_vars = python_config.get_python_config_vars(env)
 
+	env.Append(LIBPATH = _config_vars.lib_paths)
 	env.Append(LINKFLAGS = _config_vars.link_flags)
 	env.Append(LIBS = _config_vars.link_libs)
 	env.Append(CPPPATH = _config_vars.include_flags)

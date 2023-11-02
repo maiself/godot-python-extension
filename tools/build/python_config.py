@@ -79,9 +79,8 @@ def get_python_config_vars(env) -> types.SimpleNamespace:
 
 	python_lib = f'python{version}{abiflags}'
 
-	#if env['use_mingw']: # XXX: which condition to use?
-	if env['platform'] == 'windows':
-		python_lib += '.dll.a' # XXX: '.a' added to workaround weirdness with scons
+	if env['use_mingw']:
+		python_lib += '.dll.a'
 
 	def normpath(path: str) -> str:
 		# XXX: not so nice...
@@ -93,13 +92,16 @@ def get_python_config_vars(env) -> types.SimpleNamespace:
 		return path
 
 	config_vars.include_flags = _stable_unique([
-			f'-I{normpath(value)}'
+			f'{normpath(value)}'
 			for name in ('INCLUDEPY', 'include', 'platinclude')
 			if (value := sysconfig_vars.get(name))
 		])
 
+	config_vars.lib_paths = _stable_unique([
+			*[f'{normpath(sysconfig_vars.get("LIBDIR"))}'] * bool(sysconfig_vars.get("LIBDIR")),
+		])
+
 	config_vars.link_flags = _stable_unique([
-			*[f'-L{normpath(sysconfig_vars.get("LIBDIR"))}'] * bool(sysconfig_vars.get("LIBDIR")),
 			*itertools.chain(*(
 				value.split()
 				for name in ('LIBS', 'SYSLIBS')
@@ -124,6 +126,10 @@ def get_python_config_vars(env) -> types.SimpleNamespace:
 		config_vars.include_flags.insert(0,
 			os.path.join(config_vars.include_flags[0], f'python{version}{abiflags}'))
 		config_vars.include_flags = _stable_unique(config_vars.include_flags)
+
+	# XXX: why is this not in config?
+	if env.get('is_msvc'):
+		config_vars.lib_paths.append(str(pathlib.Path(target_python).parent / 'libs'))
 
 	#print(f'\n{config_vars}\n')
 
