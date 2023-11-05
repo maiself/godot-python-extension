@@ -56,9 +56,17 @@ def _get_current_gdextension_path() -> pathlib.Path:
 
 
 def _get_target_platform_lib(platform, arch) -> pathlib.Path:
-	for line in _get_current_gdextension_path().read_text().splitlines():
-		if match_ := re.fullmatch(rf'{platform}\.{arch}\s*=\s*"res://(?P<path>.+)"', line):
-			path = pathlib.Path(match_.group('path'))
+	gdextension_path = _get_current_gdextension_path()
+
+	for line in gdextension_path.read_text().splitlines():
+		if match_ := re.fullmatch(rf'{platform}\.{arch}\s*=\s*"(?P<path>.+)"', line):
+			path = match_.group('path')
+
+			if path.startswith('res://'):
+				path = path.removeprefix('res://')
+			else:
+				path = gdextension_path.parent / path
+
 			if path.exists():
 				return path
 
