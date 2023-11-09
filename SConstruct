@@ -344,6 +344,9 @@ if env['platform'] == 'windows':
 
 env.Prepend(CPPPATH=['src', os.fspath(generated_path), 'extern/pybind11/include'])
 
+env.Append(CPPDEFINES = [f'PYGODOT_PLATFORM=\\"{env["platform"]}\\"'])
+env.Append(CPPDEFINES = [f'PYGODOT_ARCH=\\"{env["arch"]}\\"'])
+
 
 def _append_python_config(env, target, **kwargs):
 	src_dir = generated_path / 'python' / prepared_python_config.name

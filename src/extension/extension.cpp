@@ -64,19 +64,12 @@ static struct runtime_config_t {
 
 		// `library_path`
 		{
-			// get the library path as specified in the `.gdextension` file
-			String library_res_path{uninitialized};
-			extension_interface::get_library_path(extension_interface::library, uninitialized(library_res_path));
+			// get the current extension library path
+			String library_path_string{uninitialized};
+			extension_interface::get_library_path(extension_interface::library,
+				uninitialized(library_path_string));
 
-			// convert from a `res://` path to real path
-			library_path = project_path
-				/ std::filesystem::path(std::string(library_res_path).data() + strlen("res://"));
-		}
-
-		auto platform_arch = library_path.parent_path().filename();
-
-		if(!likely_running_from_editor) {
-			library_path = executable_path.parent_path() / library_path.filename();
+			library_path = std::filesystem::path(std::string(library_path_string));
 		}
 
 		// `lib_dir_path`
@@ -87,6 +80,7 @@ static struct runtime_config_t {
 			python_home_path = lib_dir_path;
 		}
 		else {
+			auto platform_arch = std::string(PYGODOT_PLATFORM) + "-" + std::string(PYGODOT_ARCH);
 			python_home_path = lib_dir_path / "lib" / platform_arch;
 		}
 	}
