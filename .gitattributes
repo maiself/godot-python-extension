@@ -1,0 +1,7 @@
+* text=auto eol=lf export-ignore
+
+*.gdextension !export-ignore
+
+/lib !export-ignore
+/lib/** !export-ignore
+

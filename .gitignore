@@ -1,0 +1,13 @@
+*
+.*
+
+!.git*
+.gitmodules
+
+!*.gdextension
+!license.md
+
+!/lib
+!/lib/**
+/lib/godot/
+
