@@ -36,6 +36,17 @@ class Dictionary(godot.Dictionary):
 
 	__repr__ = __str__
 
+	def __init__(self, *args, **kwargs):
+		if args and kwargs:
+			raise TypeError(
+				f'creating a Dictionary from another while also supplying kwargs is currently not supported')
+
+		if kwargs:
+			Dictionary.__init__(self, kwargs)
+
+		else:
+			Dictionary.__init__(self, *args)
+
 	#def keys(self):
 	#	return [str(key) for key in Dictionary.keys(self)]
 
