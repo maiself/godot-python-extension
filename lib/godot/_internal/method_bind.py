@@ -469,7 +469,7 @@ def _bind_op(cls, type_info, op_info, method_name, op_enum, reverse=False):
 					f'''invalid operator evaluator: {type_info.name}.{method_name}() -> {op_info.return_type}'''
 				)
 
-		op = lambda self: op_eval(self)
+		op = lambda self: op_eval(self, None)
 
 		utils.swap_members(cls, method_name, op)
 		return
