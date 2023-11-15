@@ -258,11 +258,23 @@ def load_api_data(data: bytes | str | None = None) -> Namespace:
 
 	if data is None:
 		if __package__:
-			package = importlib.resources.files(__package__)
-		else:
-			package = pathlib.Path(__file__).parent
+			data = (importlib.resources.files(__package__) / 'extension_api.json').read_text()
 
-		data = package.joinpath('extension_api.json').read_text()
+		else:
+			try:
+				data = (pathlib.Path(__file__).parent / 'extension_api.json').read_text()
+
+			except FileNotFoundError:
+				# XXX: if the file doesn't exist in the module directory try to find it
+				# in the project's extern directory
+
+				project_root = pathlib.Path(__file__).parent.parent.parent.parent
+				gdextension_dir = project_root / 'extern' / 'gdextension'
+
+				if not gdextension_dir.exists():
+					raise
+
+				data = (gdextension_dir / 'extension_api.json').read_text()
 
 	elif isinstance(data, bytes):
 		data = data.decode()
