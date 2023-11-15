@@ -89,6 +89,24 @@ def bind_variant_type(type_info):
 	method_bind.bind_variant_operators(cls, type_info)
 
 
+	if hasattr(cls, 'duplicate'):
+		if type_info.methods.duplicate.get('arguments', []):
+			cls.__copy__ = lambda self: self.duplicate(False)
+			cls.__deepcopy__ = lambda self, memo: self.duplicate(True)
+		else:
+			cls.__copy__ = lambda self: self.duplicate()
+			cls.__deepcopy__ = lambda self, memo: self.duplicate()
+	else:
+		cls.__copy__ = lambda self: cls(self)
+		cls.__deepcopy__ = lambda self, memo: cls(self)
+
+	cls.__copy__.__name__ = '__copy__'
+	cls.__deepcopy__.__name__ = '__deepcopy__'
+
+	if not hasattr(cls, 'copy'):
+		cls.copy = cls.__copy__ # XXX: is it a good idea to add this?
+
+
 	# XXX XXX: move this elsewhere
 
 	variant_type_has_members = bool(type_info.get('members'))
