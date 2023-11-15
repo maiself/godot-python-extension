@@ -55,6 +55,18 @@ def bind_variant_type(type_info):
 		else:
 			const = utils.parse_value_str_to_value(info.value, type_ = info.type)
 
+			def make_const(const, name):
+				class _const:
+					def __get__(self, instance, owner):
+						return cls(const)
+
+					def __repr__(self):
+						return f'<const {cls.__name__}.{name} {const}>'
+
+				return _const()
+
+			const = make_const(const, info.name)
+
 		class_set_attr(cls, info.name, const)
 
 	for info in type_info.get('enums', []):
@@ -202,6 +214,9 @@ class property_proxy(): # XXX
 
 	#@utils.log_calls
 	def __get__(self, obj, obj_type=None):
+		if not obj:
+			return self
+
 		if prop := getattr(obj, self._name, None):
 			return prop
 
