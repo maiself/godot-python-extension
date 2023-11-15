@@ -82,15 +82,19 @@ def _module_getattr(key):
 	if class_info := api.classes.get(key):
 		logger.info(f'\033[94;1mbinding class {key}\033[0m')
 
+		# XXX: return None when singleton is not yet registered... is this really the right thing to do?
+		if _Engine and key in _singleton_names and not _Engine.has_singleton(key):
+			return None
+
 		try:
 			res = type_bind.bind_class(class_info)
 		except Exception as exc:
 			#print(''.join(utils.format_exception(exc)).removesuffix('\n'), file=sys.stderr) # XXX
 			raise# RuntimeError
 
-		if _Engine:
-			# XXX: it seems this is needed as available singletons may change
-			_singleton_names |= set(_Engine.get_singleton_list())
+		#if _Engine:
+		#	# XXX: it seems this is needed as available singletons may change
+		#	_singleton_names |= set(_Engine.get_singleton_list())
 
 		if key in _singleton_names:
 			res = gde.global_get_singleton(key)
