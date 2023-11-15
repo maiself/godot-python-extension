@@ -332,12 +332,17 @@ class PythonScript(godot.ScriptExtension):
 					pass
 
 
-		module_name = utils.godot_path_to_python_module_name(self._path)
+		module_name = godot_fs_importer.get_module_name_from_path(self._path)
 		module_name = module_name.removesuffix('.__init__') # XXX
 
 		# import or reload the module
 		try:
 			with utils.print_exceptions_and_reraise():
+				if (path := godot_fs_importer.get_module_path_from_name(module_name)) != self._path:
+					raise RuntimeError(
+						f'PythonScript {self._path!r} wants to import as {module_name!r} but another '
+						f'module in the search path can be found with that name: {path!r}')
+
 				# XXX: dependant scripts?
 				if module := sys.modules.get(module_name):
 					importlib.reload(module) # XXX

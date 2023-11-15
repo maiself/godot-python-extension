@@ -7,14 +7,6 @@ import textwrap
 from godot._internal.utils import * # XXX
 
 
-
-def godot_path_to_python_module_name(path: str) -> str:
-	return path.removeprefix('res://').removesuffix('.py').replace('/', '.') # XXX
-
-def python_module_name_to_godot_path(mod_name: str) -> str:
-	return mod_name.replace('.', '/').join(('res://', '.py')) # XXX
-
-
 def log_calls(func, cls=None):
 	@functools.wraps(func)
 	def wrapper(*args, **kwargs):
