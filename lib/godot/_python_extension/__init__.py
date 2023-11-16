@@ -40,7 +40,6 @@ cli.main()
 
 if godot.Engine.is_editor_hint():
 	from . import editor
-	editor.init_extension()
 
 
 @atexit.register

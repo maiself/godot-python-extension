@@ -6,7 +6,7 @@ import godot
 
 from godot._internal.extension_classes import *
 
-from . import utils
+from .. import utils
 
 
 _platforms = (

@@ -4,7 +4,12 @@ import functools
 
 import godot
 
-from . import utils
+from .. import utils
+
+
+if not godot.Engine.is_editor_hint():
+	raise ImportError(
+		f'cannot import module {__name__!r} when not running from editor')
 
 
 def _continue_after_fail(func):
@@ -101,16 +106,12 @@ def _reload_python_extension_modules():
 	print('\033[91;1m', f'finished reloading', '\033[0m\n', sep='')
 
 
-def _deferred_init_extension():
+def _init():
 	_init_settings()
 	_install_icons()
 	_install_commands()
 
 	_register_export_plugin()
-
-
-def init_extension():
-	godot.Callable(_deferred_init_extension).call_deferred() # XXX: singletons aren't ready immediately
 
 
 def _reload():
@@ -124,5 +125,7 @@ try:
 
 except NameError:
 	_is_first_module_init = False
+
+	godot.Callable(_init).call_deferred() # XXX: singletons aren't ready immediately
 
 
