@@ -1,3 +1,5 @@
+import sys
+import importlib
 import functools
 
 import godot
@@ -12,6 +14,31 @@ def _continue_after_fail(func):
 			return func(*args, **kwargs)
 		return Exception
 	return wrapper
+
+
+_commands = []
+
+def _command(func):
+	key = f'python_extension/{func.__name__.removeprefix("_")}'
+	label = func.__doc__.splitlines()[0].strip()
+	_commands.append((key, label, func))
+	return func
+
+
+@_continue_after_fail
+def _install_commands():
+	command_palette = godot.EditorInterface.get_command_palette()
+
+	for key, label, func in _commands:
+		command_palette.add_command(label, key, func)
+
+
+@_continue_after_fail
+def _uninstall_commands():
+	command_palette = godot.EditorInterface.get_command_palette()
+
+	for key, label, func in _commands:
+		command_palette.remove_command(key)
 
 
 @_continue_after_fail
@@ -53,14 +80,49 @@ def _register_export_plugin():
 	from . import export_plugin
 
 
+@_command
+def _reload_python_extension_modules():
+	'''Reload Python Extension Modules'''
+
+	# TODO: test and enable reload for more modules
+	reloadable_modules = [
+		'godot._python_extension.python_language',
+		#'godot._python_extension.python_script',
+		'godot._python_extension.editor',
+	]
+
+	print('\n\033[91;1m', 'reloading python extension modules...', '\033[0m', sep='')
+
+	for module_name in reloadable_modules:
+		if module := sys.modules.get(module_name):
+			print('\033[91;3m', f'  {module_name}', '\033[0m', sep='')
+			importlib.reload(module)
+
+	print('\033[91;1m', f'finished reloading', '\033[0m\n', sep='')
+
+
 def _deferred_init_extension():
 	_init_settings()
 	_install_icons()
+	_install_commands()
 
 	_register_export_plugin()
 
 
 def init_extension():
 	godot.Callable(_deferred_init_extension).call_deferred() # XXX: singletons aren't ready immediately
+
+
+def _reload():
+	_uninstall_commands()
+	_install_commands()
+
+
+try:
+	if not _is_first_module_init:
+		_reload()
+
+except NameError:
+	_is_first_module_init = False
 
 

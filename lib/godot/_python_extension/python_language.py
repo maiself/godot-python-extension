@@ -14,8 +14,6 @@ from .python_script import PythonScript
 @register_extension_class
 #@utils.log_method_calls
 class PythonLanguage(godot.ScriptLanguageExtension):
-	__instance = None
-
 	@classmethod
 	def get(cls):
 		return cls.__instance
