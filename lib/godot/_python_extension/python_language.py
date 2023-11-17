@@ -167,8 +167,9 @@ class PythonLanguage(godot.ScriptLanguageExtension):
 		return False
 
 	def _complete_code(self, code: str, path: str, owner: godot.Object) -> dict:
-		return {}
-		raise NotImplementedError
+		from .editor.code_completion import complete
+
+		return complete(code, path, owner)
 
 	def _lookup_code(self, code: str, symbol: str, path: str, owner: godot.Object) -> dict:
 		return {}
