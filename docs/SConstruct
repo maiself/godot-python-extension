@@ -1,0 +1,76 @@
+import shlex
+
+
+sphinx_conf = 'conf.py'
+source_dir = '.'
+
+
+targets = ['html', 'dirhtml', 'epub', 'text', 'live']
+
+
+env = Environment()
+
+opts = Variables([], ARGUMENTS)
+
+opts.Add(
+	EnumVariable(
+		key = 'target',
+		help = 'build target',
+		default = 'dirhtml',
+		allowed_values = targets,
+	)
+)
+
+opts.Add(
+	PathVariable(
+		key = 'build_dir',
+		help = 'build directory',
+		default = '_build',
+		validator = PathVariable.PathIsDirCreate,
+	)
+)
+
+opts.Add(
+	tuple(dict(
+		key = 'sphinx',
+		help = 'sphinx build program name',
+		default = 'sphinx-build',
+	).values())
+)
+
+opts.Update(env)
+Help(opts.GenerateHelpText(env))
+
+
+def make_command_str(*args) -> str:
+	return shlex.join(str(x) for x in args)
+
+
+def gen_target(target_name):
+	if target_name != 'live':
+		sphinx = env['sphinx']
+		builder = target_name
+
+	else:
+		sphinx = 'sphinx-autobuild'
+		builder = 'dirhtml'
+
+	target_dir = Dir(target_name, env['build_dir'])
+
+	target_command = Command(target_name, sphinx_conf,
+		make_command_str(
+			sphinx, '-b', builder, source_dir, target_dir
+		),
+		ENV = {'FORCE_COLOR': '1'},
+	)
+	AlwaysBuild(target_name)
+
+	Clean(target_name, [target_dir])
+
+
+for target_name in targets:
+	gen_target(target_name)
+
+
+Default(env.get('target'))
+

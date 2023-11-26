@@ -1,0 +1,19 @@
+.page {
+	tab-size: 4;
+}
+
+.sidebar-brand {
+	flex-direction: row;
+	padding: 1rem 1rem;
+	margin-top: 0.5rem;
+}
+
+.sidebar-logo {
+	max-width: 2.6rem;
+	margin-right: 0.6rem;
+}
+
+.sidebar-brand-text {
+	font-size: 1.3rem;
+}
+
