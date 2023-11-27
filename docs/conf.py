@@ -7,7 +7,10 @@ author = 'Mai Lavelle'
 
 # general
 
-extensions = ['myst_parser']
+extensions = [
+	'myst_parser',
+	'sphinx_copybutton',
+]
 
 exclude_patterns = [
 	'.*',

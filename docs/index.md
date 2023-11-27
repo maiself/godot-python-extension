@@ -4,10 +4,22 @@ This project provides [**Python**](https://www.python.org/) language bindings fo
 
 The bindings are implemented as a [GDExtension](https://godotengine.org/article/introducing-gd-extensions) that exposes Godot's APIs and enables extension classes and scripts to be written in Python.
 
-Source code can be found [here](https://github.com/maiself/godot-python-extension).
+Source code for the project can be found [here](https://github.com/maiself/godot-python-extension).
 
-Full documentation is currently in the process of being written.
+```{admonition} Documentation status
 
+Full documentation is still in the process of being written. Please check back if anything is missing. You can also summit an [issue](https://github.com/maiself/godot-python-extension/issues) or [pull request](https://github.com/maiself/godot-python-extension/pulls) to help out in completing the documentation.
+```
+
+```{admonition} Project status
+:class: warning
+
+This repository is a work in progress and should be considered experimental. It's not yet production ready.
+
+＊ *Please use version control with any project.*
+
+Issues can be reported [here](https://github.com/maiself/godot-python-extension/issues). Suggestions on improvement are also welcomed.
+```
 
 ## Example
 
@@ -41,8 +53,20 @@ This project released under the MIT license, see the [license.md](https://github
 
 ## Contents
 
-To be added.
+```{toctree}
+:caption: Using the extension
+:maxdepth: 3
+
+usage/installation
+usage/type-conversions
+reference/index
+```
 
 ```{toctree}
+:caption: Development
+
+development/building
+development/without-building
+development/architecture
 ```
 
