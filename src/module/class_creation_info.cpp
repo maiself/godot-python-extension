@@ -298,6 +298,8 @@ PyGDExtensionClassCreationInfo::operator GDExtensionClassCreationInfo() {
 		{
 			py::gil_scoped_acquire gil;
 			//printf("# to_string_func\n");
+
+			*r_is_valid = false;
 		},
 
 		.reference_func = [](GDExtensionClassInstancePtr p_instance)

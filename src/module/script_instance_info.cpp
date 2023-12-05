@@ -280,6 +280,11 @@ PyGDExtensionScriptInstanceInfo::operator const GDExtensionScriptInstanceInfo&()
 			GDExtensionVariantPtr res, GDExtensionCallError* error) -> void
 		{
 			py::gil_scoped_acquire gil;
+
+			if(error) {
+				error->error = GDEXTENSION_CALL_OK; // XXX
+			}
+
 			try {
 				try {
 					auto [info, self] = *reinterpret_cast<ScriptInstanceData*>(instance);

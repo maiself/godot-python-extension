@@ -87,6 +87,10 @@ PyGDExtensionClassMethodInfo::operator GDExtensionClassMethodInfo() {
 
 			py::gil_scoped_acquire gil;
 
+			if(error) {
+				error->error = GDEXTENSION_CALL_OK; // XXX
+			}
+
 			try {
 				if(method_info.method_flags & GDEXTENSION_METHOD_FLAG_STATIC) {
 					cast(res)
@@ -103,6 +107,10 @@ PyGDExtensionClassMethodInfo::operator GDExtensionClassMethodInfo() {
 				"While calling: " + get_fully_qualified_name(method_info.call_func))
 
 			//cast(res, get_return_cast_info(method_info)) = py::object(); // XXX
+
+			if(error) {
+				error->error = GDEXTENSION_CALL_ERROR_INVALID_METHOD; // XXX
+			}
 		},
 
 		.ptrcall_func = [](

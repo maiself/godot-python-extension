@@ -44,6 +44,10 @@ static deferred_call_t& call_deferred(Func&& func) {
 			auto* ptr = static_cast<deferred_call_t*>(userdata);
 			auto& func = *ptr;
 
+			if(error) {
+				error->error = GDEXTENSION_CALL_OK; // XXX
+			}
+
 			try {
 				func();
 			}
