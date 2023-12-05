@@ -6,6 +6,20 @@ namespace pygodot {
 
 
 void func_to_callable(GDExtensionUninitializedTypePtr ptr, py::function func) {
+	if(py::isinstance<Callable>(func)) {
+		cast(ptr, variant_type_to_enum_value<Callable>, false) = func;
+		return;
+	}
+
+	static py::handle cast_to_callable = resolve_name("godot._internal.utils.cast_to_callable");
+
+	func = cast_to_callable(func);
+
+	if(py::isinstance<Callable>(func)) {
+		cast(ptr, variant_type_to_enum_value<Callable>, false) = func;
+		return;
+	}
+
 	GDExtensionCallableCustomInfo info = {
 		.callable_userdata = func.ptr(),
 		.token = extension_interface::token,

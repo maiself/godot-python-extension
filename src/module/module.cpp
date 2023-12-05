@@ -671,7 +671,8 @@ PYBIND11_EMBEDDED_MODULE(_gdextension, module_) {
 
 
 	module_.def("callable_custom_get_userdata", [](const Callable& callable) -> py::object {
-		auto* obj = static_cast<PyObject*>(extension_interface::callable_custom_get_userdata(callable, nullptr));
+		auto* obj = static_cast<PyObject*>(extension_interface::callable_custom_get_userdata(
+			callable, extension_interface::token));
 		if(!obj) {
 			return py::none();
 		}

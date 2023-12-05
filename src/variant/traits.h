@@ -319,7 +319,7 @@ concept MaybeUninitializedPointer = InitializedPointer<T> || UninitializedPointe
 // py::object
 
 template<typename T>
-concept PythonObject = std::is_same_v<std::remove_const_t<T>, py::object>
+concept PythonObject = std::is_base_of_v<py::object, std::remove_const_t<T>>
 	|| std::is_same_v<std::remove_const_t<T>, py::handle>; // XXX: handle?
 
 template<typename T>

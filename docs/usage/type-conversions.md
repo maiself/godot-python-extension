@@ -81,7 +81,4 @@ If any key, value, or nested value cannot be converted the result will be an err
 
 _To be written..._
 
-```{caution}
-Bound methods are currently referenced strongly, which can cause issues with objects not being collected properly. This behavior is likely to be changed soon.
-```
 

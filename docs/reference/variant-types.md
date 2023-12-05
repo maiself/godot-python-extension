@@ -34,4 +34,8 @@ Return a sequence of `(key, value)` pairs.
 ```{method} __call__(*args)
 Alias for `godot.Callable.call()`
 ```
+
+```{method} get_custom()
+Return the original Python callable if available.
+```
 ````

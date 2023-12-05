@@ -26,6 +26,9 @@ class StringName(gde.StringName):
 class Callable(godot.Callable):
 	__call__ = godot.Callable.call
 
+	def get_custom(self):
+		return utils.original_callable(self)
+
 
 # dictionary
 
