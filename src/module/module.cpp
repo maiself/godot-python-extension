@@ -42,7 +42,16 @@ py::object variant_get_ptr_constructor(
 		(py::object self, py::args args) -> void
 	{
 		__init_uninitialized__(self);
-		constructor_ptr(cast(self, type), cast(args, arg_types));
+		try {
+			constructor_ptr(cast(self, type), cast(args, arg_types));
+		}
+		catch(...) {
+			// cast may throw before the constructor is called, need to reinitialize the variant
+			auto default_constructor_ptr = extension_interface::variant_get_ptr_constructor(type, 0);
+			default_constructor_ptr(cast(self, type),
+				std::array<GDExtensionConstTypePtr, 0>{}.data());
+			throw;
+		}
 	};
 
 	return py::cpp_function(std::move(func), py::name("constructor")); // TODO: name

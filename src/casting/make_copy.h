@@ -229,7 +229,15 @@ auto make_copy(Pointer ptr, ObjectType obj, GDExtensionVariantType variant_type)
 				if(!constructor) {
 					throw std::runtime_error("invalid variant constructor");
 				}
-				constructor(uninitialized(ref), cast(obj, variant_type));
+
+				try {
+					constructor(uninitialized(ref), cast(obj, variant_type));
+				}
+				catch(...) {
+					// cast may throw before the constructor is called, need to reinitialize the variant
+					::new(&ref) Type();
+					throw;
+				}
 			}
 		}
 
@@ -314,7 +322,14 @@ auto make_copy(Pointer ptr, ObjectType obj, GDExtensionVariantType variant_type)
 				ref.~Type();
 			}
 
-			func_to_callable(uninitialized(ref), func); // XXX: move to new file?
+			try {
+				func_to_callable(uninitialized(ref), func); // XXX: move to new file?
+			}
+			catch(...) {
+				// cast may throw before the constructor is called, need to reinitialize the variant
+				::new(&ref) Type();
+				throw;
+			}
 		}
 		else {
 			throw std::runtime_error("python object of type '"
