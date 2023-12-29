@@ -542,9 +542,14 @@ auto variant_type_from_type_handle_inferred(std::convertible_to<py::handle> auto
 	static py::handle list = resolve_name("list");
 	static py::handle tuple = resolve_name("tuple");
 
+	static py::handle strname = resolve_name("godot._internal.utils.strname"); // XXX: special case
+
 	// XXX: fast path for str, dict, list and tuple
 	if(type.ptr() == str.ptr()) {
 		return variant_type_to_enum_value<String>;
+	}
+	else if(type.ptr() == strname.ptr()) {
+		return variant_type_to_enum_value<StringName>;
 	}
 	else if(type.ptr() == dict.ptr()) {
 		return variant_type_to_enum_value<Dictionary>;
@@ -590,7 +595,10 @@ auto variant_type_from_type_handle_inferred(std::convertible_to<py::handle> auto
 
 	static py::handle Callable_ = resolve_name("collections.abc.Callable"); // XXX
 
-	if(issubclass(type, str)) {
+	if(issubclass(type, strname)) {
+		return variant_type_to_enum_value<StringName>;
+	}
+	else if(issubclass(type, str)) {
 		return variant_type_to_enum_value<String>;
 	}
 	else if(issubclass(type, Mapping)) {

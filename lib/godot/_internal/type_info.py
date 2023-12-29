@@ -320,8 +320,12 @@ class VariantTypeInfo(TypeInfo): # XXX: rename
 
 	@functools.cached_property
 	def implicit_cast_type_object(self) -> type | None:
-		if self._variant_type in (godot.Variant.Type.TYPE_STRING, godot.Variant.Type.TYPE_STRING_NAME):
-			return str
+		match self._variant_type:
+			case godot.Variant.Type.TYPE_STRING:
+				return str
+
+			case godot.Variant.Type.TYPE_STRING_NAME:
+				return godot.strname
 
 		return None
 

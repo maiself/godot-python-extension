@@ -33,6 +33,11 @@ def initialize_module():
 	#for name, value in api.header.items():
 	#	setattr(godot, name, value)
 
+
+	# XXX
+	godot.strname = utils.strname
+
+
 	godot.Variant = gde.Variant # XXX
 	godot.Variant.__module__ = 'godot'
 

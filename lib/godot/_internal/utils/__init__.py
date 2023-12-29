@@ -4,3 +4,11 @@ from .variant_utils import *
 from .callable_utils import *
 from . import metaclasses
 
+
+# XXX
+class strname(str):
+	__name__ = 'strname'
+	__qualname__ = 'strname'
+	__module__ = 'godot'
+
+
