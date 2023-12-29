@@ -258,6 +258,16 @@ py::object variant_get_ptr_builtin_method(
 				py::object ret;
 				extension_interface::variant_call(cast(self, variant_type_to_enum_value<Variant>), StringName(*name), cast(args), args.size(),
 					cast(std::ref(ret), variant_type_to_enum_value<Variant>, false, nullptr), &error);
+
+				/* XXX: should this throw or fail silently?
+				if(error.error != GDEXTENSION_CALL_OK) {
+					throw std::runtime_error(std::string("error calling \"")
+						+ std::string(variant_type_handle(type).attr("__name__")) + "." + std::string(name_data)
+						+ "\":" + std::string(py::str(error.error))
+					);
+				}
+				*/
+
 				return ret;
 			},
 			py::is_method(variant_type_handle(type)),
