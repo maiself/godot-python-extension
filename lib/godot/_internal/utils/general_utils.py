@@ -1,12 +1,15 @@
 import sys
 import builtins
 import importlib
+import importlib.machinery
 import contextlib
 import functools
 import textwrap
 import time
 import traceback
 import atexit
+import collections.abc
+import itertools
 
 
 unspecified = type('unspecified', (type, ), dict(__repr__ = lambda self: 'unspecified'))('unspecified', (), {})
@@ -397,8 +400,81 @@ def swap_members(cls, attr_name=unspecified, with_obj=unspecified):
 
 
 
+_importlib_filenames = [
+	f'<frozen {k}>' if v.__loader__ is importlib.machinery.FrozenImporter else getattr(v, '__file__', '?')
+	for k, v in sys.modules.items() if k.split('.')[0] == 'importlib'
+]
+
+_godot_fs_importer_filename = None
+
+
+def filter_import_tracebacks(exc):
+	global _godot_fs_importer_filename
+
+	# lazy init of _godot_fs_importer_filename
+
+	if not _godot_fs_importer_filename:
+		try:
+			from godot._python_extension import godot_fs_importer
+			_godot_fs_importer_filename = godot_fs_importer.__file__
+
+		except Exception:
+			pass
+
+	# gather tracebacks into a list
+
+	tracebacks = [exc.__traceback__]
+
+	while tracebacks[-1].tb_next:
+		tracebacks.append(tracebacks[-1].tb_next)
+
+	# functions for finding a traceback in the list
+
+	def find_matching_tb(pred, *, start = 0, end = None) -> tuple[int, types.TracebackType | None]:
+		for i, tb in enumerate(tracebacks[start:end]):
+			if pred(tb):
+				return i+start, tb
+
+		return -1, None
+
+	def is_importlib(tb: types.TracebackType) -> bool:
+		return tb.tb_frame.f_code.co_filename in _importlib_filenames
+
+	def is_import_terminal(tb: types.TracebackType) -> bool:
+		return (
+			(is_importlib(tb) and tb.tb_frame.f_code.co_qualname == '_call_with_frames_removed')
+			or (tb.tb_frame.f_code.co_filename == _godot_fs_importer_filename
+				and tb.tb_frame.f_code.co_qualname == 'GodotFileSystemModuleImporter.source_to_code'
+			)
+		)
+
+	# remove spans of import tracebacks
+
+	while True:
+		start, tb = find_matching_tb(is_importlib)
+
+		if not tb:
+			break
+
+		end, tb = find_matching_tb(is_import_terminal, start = start+1)
+
+		if not tb:
+			break
+
+		del tracebacks[start:end+1]
+
+	# update tb_next of remaining tracebacks
+
+	tb_next = None
+	for tb in reversed(tracebacks):
+		tb.tb_next = tb_next
+		tb_next = tb
+
+	exc.__traceback__ = tb_next
+
 
 def format_exception(exc, *, sgr=()):
+	filter_import_tracebacks(exc)
 	return list(ColoredTracebackException(type(exc), exc, exc.__traceback__, compact=True, sgr=sgr).format())
 
 
@@ -424,6 +500,10 @@ class ColoredTracebackException(traceback.TracebackException):
 
 	def format(self, *args, **kwargs):
 		lines = super().format(*args, **kwargs)
+
+		if self.exceptions is None and not self.stack:
+			# add back the header even if theres not really a traceback
+			lines = itertools.chain(['Traceback (most recent call last):\n'], lines)
 
 		def formatted_lines():
 			nonlocal lines
@@ -466,7 +546,22 @@ class ColoredTracebackException(traceback.TracebackException):
 		lines = super().format_exception_only()
 
 		if self.exc_type and issubclass(self.exc_type, SyntaxError):
-			yield from (self._make_params_line(line, _sgr.bold) for line in lines)
+			if (
+				isinstance(self.__notes__, collections.abc.Sequence)
+				and not isinstance(self.__notes__, (str, bytes))
+			):
+				note_lines = -sum(len(str(note).split('\n')) for note in self.__notes__)
+			elif self.__notes__ is not None:
+				note_lines = -1
+			else:
+				note_lines = None
+
+			lines = list(lines)
+
+			yield from (self._make_params_line(line, _sgr.bold) for line in lines[:note_lines])
+
+			if note_lines is not None:
+				yield from (self._make_params_line(line, _sgr.bold, _sgr.dim) for line in lines[note_lines:])
 
 		else:
 			yield self._make_params_line(next(lines), _sgr.bold)
