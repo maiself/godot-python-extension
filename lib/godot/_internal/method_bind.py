@@ -248,7 +248,7 @@ def bind_method(cls, type_info, method_info, with_docs=True):
 		with utils.exception_note(
 			lambda: f'While binding method \'{full_method_name}\' with code:\n' + method_code
 		):
-			exec(method_code, namespace)
+			exec(compile(method_code, f'<godot.{full_method_name}>', 'exec'), namespace)
 
 		method = namespace.get(method_info.name)
 
@@ -387,7 +387,7 @@ def bind_variant_constructors(cls, type_info):
 
 
 	with utils.exception_note(lambda: f'Constructor code:\n\n{constructor_code}'):
-		exec(constructor_code, namespace)
+		exec(compile(constructor_code, f'<godot.{cls.__qualname__}.__init__>', 'exec'), namespace)
 
 	method = namespace.get('__init__')
 
