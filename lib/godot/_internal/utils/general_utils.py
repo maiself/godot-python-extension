@@ -199,8 +199,8 @@ def resolve_name(name, *, context=None, use_cache=True) -> object: # XXX: assess
 					return None
 
 			for i in range(len(parts), 0, -1):
-				if (mod := try_import('.'.join(parts[:i]))) is None:
-					continue
+				if mod := try_import('.'.join(parts[:i])):
+					break
 
 			if mod:
 				obj = mod
