@@ -2,7 +2,21 @@ import sys
 import pathlib
 import importlib
 
-import _gdextension as gde
+try:
+	import _gdextension as gde
+
+except ModuleNotFoundError:
+	gde = None
+
+if not gde:
+	try:
+		from . import _gdextension as gde
+	except Exception as _exc:
+		raise ImportError(
+			"the 'godot' module cannot be initialized, "
+			"unable to import the required '_gdextension' module"
+		) from _exc
+
 
 from . import utils
 
@@ -19,6 +33,9 @@ def _init():
 
 
 def _check_env():
+	if getattr(gde, '_is_stub', False):
+		return
+
 	#sys.path.remove('') # XXX: current directory shouldnt be in path, check interpreter initialization
 	if any(path in sys.path for path in ('', '.', './')):
 		raise RuntimeError(f'current directory found in sys.path')
@@ -66,7 +83,8 @@ def _load_api_data():
 
 			# get api json from packed data
 			data = utils.get_file_as_bytes('res://.python/extension_api.json.gz')
-			data = gzip.decompress(data)
+			if data:
+				data = gzip.decompress(data)
 
 		else:
 			# try to get or update cached api json when running from editor

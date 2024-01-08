@@ -258,9 +258,12 @@ def load_api_data(data: bytes | str | None = None) -> Namespace:
 
 	if data is None:
 		if __package__:
-			data = (importlib.resources.files(__package__) / 'extension_api.json').read_text()
+			try:
+				data = (importlib.resources.files(__package__) / 'extension_api.json').read_text()
+			except FileNotFoundError:
+				pass
 
-		else:
+		if data is None:
 			try:
 				data = (pathlib.Path(__file__).parent / 'extension_api.json').read_text()
 
