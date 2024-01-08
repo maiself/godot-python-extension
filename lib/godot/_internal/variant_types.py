@@ -1,6 +1,10 @@
+import collections.abc
+import typing
+
 import _gdextension as gde
 
 import godot
+import godot.types
 
 from . import utils
 from .utils import fullname
@@ -62,5 +66,26 @@ class Dictionary(godot.Dictionary):
 
 	#def __iter__(self):
 	#	return (str(key) for key in self.keys())
+
+
+# register `godot.Dictionary` as satisfying `collections.abc.Mapping`
+# TODO: check that interface is fully satisfied
+collections.abc.Mapping.register(godot.Dictionary)
+
+
+# arrays
+
+@utils.swap_members
+class PackedByteArray(godot.PackedByteArray):
+	# TODO: implement buffer protocol
+	__buffer__ = lambda self, flags: memoryview(bytes(self))
+
+
+# register godot `Array` and `PackedArray` types as satisfying `collections.abc.Sequence`
+# TODO: check that interface is fully satisfied
+[
+	collections.abc.Sequence.register(array_type)
+	for array_type in typing.get_args(godot.types.ArrayType)
+]
 
 
