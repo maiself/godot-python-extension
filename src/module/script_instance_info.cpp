@@ -11,6 +11,17 @@
 namespace pygodot {
 
 
+class ScriptInstanceData {
+public:
+	std::shared_ptr<const PyGDExtensionScriptInstanceInfo> info;
+	py::object instance;
+
+	operator GDExtensionScriptInstanceDataPtr() {
+		return reinterpret_cast<GDExtensionScriptInstanceDataPtr>(this);
+	}
+};
+
+
 void PyGDExtensionScriptInstanceInfo::def(py::module_& module_) {
 	using type = PyGDExtensionScriptInstanceInfo;
 
@@ -377,6 +388,14 @@ PyGDExtensionScriptInstanceInfo::operator const GDExtensionScriptInstanceInfo&()
 		.free_func = [](GDExtensionScriptInstanceDataPtr p_instance) -> void
 		{
 			py::gil_scoped_acquire gil;
+			try {
+				ScriptInstanceData instance_data{std::move(*reinterpret_cast<ScriptInstanceData*>(p_instance))};
+				delete reinterpret_cast<ScriptInstanceData*>(p_instance);
+
+				auto& [info, self] = instance_data;
+				info->free_func(self);
+			}
+			CATCH_EXCEPTIONS_AND_PRINT_ERRORS()
 		},
 	};
 
@@ -386,6 +405,24 @@ PyGDExtensionScriptInstanceInfo::operator const GDExtensionScriptInstanceInfo&()
 
 PyGDExtensionScriptInstanceInfo::operator const GDExtensionScriptInstanceInfo*() const {
 	return &static_cast<const GDExtensionScriptInstanceInfo&>(*this);
+}
+
+
+py::int_ script_instance_create(std::shared_ptr<const PyGDExtensionScriptInstanceInfo> info,
+	py::object instance)
+{
+	auto* data = new ScriptInstanceData{info, instance};
+	return py::reinterpret_steal<py::int_>(PyLong_FromVoidPtr( // XXX
+			extension_interface::script_instance_create(*info, *data)
+		));
+}
+
+
+py::int_ placeholder_script_instance_create(Object* language, Object* script, Object* owner)
+{
+	return py::reinterpret_steal<py::int_>(PyLong_FromVoidPtr( // XXX
+			extension_interface::placeholder_script_instance_create(*language, *script, *owner)
+		));
 }
 
 

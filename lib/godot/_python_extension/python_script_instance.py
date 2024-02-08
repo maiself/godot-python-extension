@@ -9,6 +9,20 @@ from . import script_utils
 
 class _script_instance_info_meta(type(gde.GDExtensionScriptInstanceInfo)):
 	def __new__(cls, name, bases, namespace):
+		# XXX: pybind11 complains about `None`, use `type(None)` instead
+		cleared = type(None)
+
+		res_type = bases[0]
+
+		try:
+			res = globals()[name] # try to get and reuse the existing object
+		except KeyError:
+			res = res_type() # otherwise create a new one
+		else:
+			# if is an existing object, clear members
+			for attr_name in (name for name in dir(res_type) if not name.startswith('__')):
+				setattr(res, attr_name, cleared)
+
 		def wrap(func): # XXX
 			import sys, functools
 			@functools.wraps(func)
@@ -20,14 +34,39 @@ class _script_instance_info_meta(type(gde.GDExtensionScriptInstanceInfo)):
 					raise
 			return wrapper
 
-		return utils.apply_attrs(bases[0](),
+		res = utils.apply_attrs(res,
 			**{name: wrap(value) for name, value in namespace.items() if not name.startswith('__')})
+
+		# raise NotImplementedError for functinos not implemented when called
+		for attr_name in (name for name in dir(res_type) if not name.startswith('__')):
+			try:
+				value = getattr(res, attr_name, None)
+			except Exception:
+				value = None
+
+			if not value or value is cleared:
+				def make_func(attr_name):
+					def func(*args, **kwargs):
+						raise NotImplementedError(
+							f'{name}.{attr_name} is not implemented')
+					func.__name__ = attr_name
+					func.__qualname__ = f'{name}.{attr_name}'
+
+					return func
+
+				setattr(res, attr_name, make_func(attr_name))
+
+		return res
 
 
 class PythonScriptInstanceInfo(gde.GDExtensionScriptInstanceInfo, metaclass=_script_instance_info_meta):
 	def set_func(inst, name: godot.StringName, value: object) -> bool:
 		if _set := getattr(inst, '_set', None):
 			return _set(name, value)
+
+		#if not hasattr(inst, str(name)):
+		#	#print((inst, name))
+		#	return False
 
 		setattr(inst, str(name), value) # XXX
 		return True # XXX
@@ -99,7 +138,11 @@ class PythonScriptInstanceInfo(gde.GDExtensionScriptInstanceInfo, metaclass=_scr
 		except AttributeError:
 			raise NotImplementedError
 
-		return method(*args)
+		try:
+			return method(*args)
+		except Exception as exc:
+			exc.__traceback__ = exc.__traceback__.tb_next
+			raise
 
 	def notification_func(inst, what):
 		if hasattr(inst, '_notification'):
@@ -124,6 +167,7 @@ class PythonScriptInstanceInfo(gde.GDExtensionScriptInstanceInfo, metaclass=_scr
 	def get_language_func(inst) -> godot.ScriptLanguage:
 		return python_language.PythonLanguage.get()
 
-	#def free_func():
+	def free_func(inst):
+		pass
 
 

@@ -57,33 +57,9 @@ public:
 };
 
 
-class ScriptInstanceData {
-public:
-	std::shared_ptr<const PyGDExtensionScriptInstanceInfo> info;
-	py::object instance;
-
-	operator GDExtensionScriptInstanceDataPtr() {
-		return reinterpret_cast<GDExtensionScriptInstanceDataPtr>(this);
-	}
-};
-
-
-inline auto script_instance_create(std::shared_ptr<const PyGDExtensionScriptInstanceInfo> info,
-	py::object instance)
-{
-	auto* data = new ScriptInstanceData{info, instance};
-	return py::reinterpret_steal<py::int_>(PyLong_FromVoidPtr( // XXX
-			extension_interface::script_instance_create(*info, *data)
-		));
-}
-
-
-inline auto placeholder_script_instance_create(Object* language, Object* script, Object* owner)
-{
-	return py::reinterpret_steal<py::int_>(PyLong_FromVoidPtr( // XXX
-			extension_interface::placeholder_script_instance_create(*language, *script, *owner)
-		));
-}
+py::int_ script_instance_create(std::shared_ptr<const PyGDExtensionScriptInstanceInfo> info,
+	py::object instance);
+py::int_ placeholder_script_instance_create(Object* language, Object* script, Object* owner);
 
 
 

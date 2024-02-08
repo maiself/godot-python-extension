@@ -93,6 +93,7 @@ def _reload_python_extension_modules():
 	reloadable_modules = [
 		'godot._python_extension.python_language',
 		#'godot._python_extension.python_script',
+		'godot._python_extension.python_script_instance',
 		'godot._python_extension.editor',
 		'godot._python_extension.editor.code_completion',
 	]
