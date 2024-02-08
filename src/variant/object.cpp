@@ -359,6 +359,24 @@ size_t Object::get_reference_count() const {
 }
 
 
+bool Object::is_valid() const {
+	if(!_ptr) {
+		return false;
+	}
+
+	// XXX: is it enough just to check the pointer?
+	return true;
+	//return (extension_interface::object_get_instance_id(*this) != 0);
+}
+
+GDObjectInstanceID Object::instance_id() const {
+	if(!is_valid()) {
+		return 0;
+	}
+	return extension_interface::object_get_instance_id(_ptr);
+}
+
+
 bool Object::init_ref() {
 	DEBUG_REFCOUNT_FUNC(this, "Object::init_ref", (), ())
 

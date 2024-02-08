@@ -325,13 +325,21 @@ py::object classdb_get_method_bind(
 	auto* name_data = name->data();
 
 	if(!is_static_method) {
-		//auto type = py::type::handle_of(py::module_::import("godot").attr(class_name));
 		auto type = resolve_name("godot." + std::string(class_name));
 
 		return py::cpp_function(
-			[name = std::move(name), method_ptr, return_type, arg_types]
+			[name = std::move(name), type, method_ptr, return_type, arg_types]
 				(Object& self, py::args args) -> py::object
 			{
+				if(!self.is_valid()) {
+					// "Cannot call method '" + *name + "' on a null value."
+					// "Cannot call method '" + *name + "' on a previously freed instance."
+
+					throw std::runtime_error("Cannot call method '"
+						+ std::string(type.attr("__name__").cast<py::str>()) + "." + *name
+						+ "' on a previously freed instance.");
+				}
+
 				py::object ret;
 				call_without_gil(extension_interface::object_method_bind_ptrcall,
 					method_ptr, self, cast(args, arg_types), cast(std::ref(ret), return_type)
@@ -696,6 +704,11 @@ PYBIND11_EMBEDDED_MODULE(_gdextension, module_) {
 			return py::none();
 		}
 		return py::reinterpret_borrow<py::function>(obj);
+	});
+
+
+	module_.def("object_get_instance_id", [](const Object& object) {
+		return object.instance_id();
 	});
 }
 

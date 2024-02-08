@@ -48,6 +48,9 @@ public:
 	bool is_reference_counted() const;
 	size_t get_reference_count() const;
 
+	bool is_valid() const;
+	GDObjectInstanceID instance_id() const;
+
 	bool init_ref();
 	bool reference();
 	bool unreference();
@@ -61,6 +64,10 @@ public:
 	}
 
 	operator GDExtensionObjectPtr&() {
+		return _ptr;
+	}
+
+	operator GDExtensionConstObjectPtr() const {
 		return _ptr;
 	}
 
