@@ -23,6 +23,7 @@ namespace pygodot {
 
 py::object get_exception_value(const py::error_already_set& exception);
 py::object get_exception_value(const py::builtin_exception& exception);
+py::object get_exception_value(const std::exception& exception);
 
 
 template<typename Note>
@@ -53,23 +54,26 @@ std::string format_exception(const Exception& exception, Notes&&... notes) {
 }
 
 
+#define _FORMAT_AND_PRINT_EXCEPTION(exception, ...) \
+	extension_interface::print_error(format_exception((exception) __VA_OPT__(,) __VA_ARGS__).data(), \
+		__FUNCTION__, __FILE__, __LINE__, false)
+
+
 #define CATCH_EXCEPTIONS_AND_PRINT_ERRORS_THEN(then, ...) \
 	catch(const py::error_already_set& exception) { \
 		if(exception.matches(PyExc_SystemExit)) { \
 			py::object code = exception.value().attr("code"); \
 			system_quick_exit(code.is_none() ? 0 : code.cast<int>()); \
 		} \
-		extension_interface::print_error(format_exception(exception __VA_OPT__(,) __VA_ARGS__).data(), \
-			__FUNCTION__, __FILE__, __LINE__, false); \
+		_FORMAT_AND_PRINT_EXCEPTION(exception __VA_OPT__(,) __VA_ARGS__); \
 		do { then } while(0); \
 	} \
 	catch(const py::builtin_exception& exception) { \
-		extension_interface::print_error(format_exception(exception __VA_OPT__(,) __VA_ARGS__).data(), \
-			__FUNCTION__, __FILE__, __LINE__, false); \
+		_FORMAT_AND_PRINT_EXCEPTION(exception __VA_OPT__(,) __VA_ARGS__); \
 		do { then } while(0); \
 	} \
 	catch(const std::exception& exception) { \
-		extension_interface::print_error(exception.what(), __FUNCTION__, __FILE__, __LINE__, false); \
+		_FORMAT_AND_PRINT_EXCEPTION(exception __VA_OPT__(,) __VA_ARGS__); \
 		do { then } while(0); \
 	}
 

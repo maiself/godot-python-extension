@@ -18,6 +18,11 @@ py::object get_exception_value(const py::builtin_exception& exception) {
 }
 
 
+py::object get_exception_value(const std::exception& exception) {
+	return resolve_name("Exception")(exception.what());
+}
+
+
 std::string format_exception_value(py::object value) {
 	py::handle format_exception;
 	try {
