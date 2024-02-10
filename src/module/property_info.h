@@ -22,7 +22,7 @@ public:
 	String hint_string;
 	uint32_t usage; // PropertyUsageFlags
 
-	py::handle python_type; // XXX: handle?
+	py::handle python_type = py::none().release(); // XXX: handle?
 
 	static void def(py::module_& module_);
 

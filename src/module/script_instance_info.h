@@ -14,41 +14,41 @@ namespace py = pybind11;
 
 class PyGDExtensionScriptInstanceInfo {
 public:
-	py::function set_func;
-	py::function get_func;
-	py::function get_property_list_func;
-	py::function free_property_list_func;
+	nullable_py_function set_func;
+	nullable_py_function get_func;
+	nullable_py_function get_property_list_func;
+	nullable_py_function free_property_list_func;
 
-	py::function property_can_revert_func;
-	py::function property_get_revert_func;
+	nullable_py_function property_can_revert_func;
+	nullable_py_function property_get_revert_func;
 
-	py::function get_owner_func;
-	py::function get_property_state_func;
+	nullable_py_function get_owner_func;
+	nullable_py_function get_property_state_func;
 
-	py::function get_method_list_func;
-	py::function free_method_list_func;
-	py::function get_property_type_func;
+	nullable_py_function get_method_list_func;
+	nullable_py_function free_method_list_func;
+	nullable_py_function get_property_type_func;
 
-	py::function has_method_func;
+	nullable_py_function has_method_func;
 
-	py::function call_func;
-	py::function notification_func;
+	nullable_py_function call_func;
+	nullable_py_function notification_func;
 
-	py::function to_string_func;
+	nullable_py_function to_string_func;
 
-	py::function refcount_incremented_func;
-	py::function refcount_decremented_func;
+	nullable_py_function refcount_incremented_func;
+	nullable_py_function refcount_decremented_func;
 
-	py::function get_script_func;
+	nullable_py_function get_script_func;
 
-	py::function is_placeholder_func;
+	nullable_py_function is_placeholder_func;
 
-	py::function set_fallback_func;
-	py::function get_fallback_func;
+	nullable_py_function set_fallback_func;
+	nullable_py_function get_fallback_func;
 
-	py::function get_language_func;
+	nullable_py_function get_language_func;
 
-	py::function free_func;
+	nullable_py_function free_func;
 
 	static void def(py::module_& module_);
 

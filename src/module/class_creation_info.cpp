@@ -168,7 +168,7 @@ PyGDExtensionClassCreationInfo::operator GDExtensionClassCreationInfo() {
 					py::object self = py::cast(reinterpret_cast<Object*>(p_instance));
 					auto info = _get_extension_class_from_instance(self);
 
-					auto res = info->set_func(self, cast(p_name), cast(p_value)).cast<py::bool_>();
+					auto res = info->set_func.value()(self, cast(p_name), cast(p_value)).cast<py::bool_>();
 					return static_cast<bool>(res);
 				}
 				catch(const py::error_already_set& exception) {
@@ -177,7 +177,7 @@ PyGDExtensionClassCreationInfo::operator GDExtensionClassCreationInfo() {
 					}
 				}
 			}
-			CATCH_EXCEPTIONS_AND_PRINT_ERRORS()
+			CATCH_EXCEPTIONS_AND_PRINT_ERRORS("While calling ClassCreationInfo.set_func")
 			return false;
 		},
 
@@ -191,7 +191,7 @@ PyGDExtensionClassCreationInfo::operator GDExtensionClassCreationInfo() {
 					py::object self = py::cast(reinterpret_cast<Object*>(instance));
 					auto info = _get_extension_class_from_instance(self);
 
-					cast(ret) = info->get_func(self, cast(name));
+					cast(ret) = info->get_func.value()(self, cast(name));
 					return true;
 				}
 				catch(const py::error_already_set& exception) {
@@ -200,7 +200,7 @@ PyGDExtensionClassCreationInfo::operator GDExtensionClassCreationInfo() {
 					}
 				}
 			}
-			CATCH_EXCEPTIONS_AND_PRINT_ERRORS()
+			CATCH_EXCEPTIONS_AND_PRINT_ERRORS("While calling ClassCreationInfo.get_func")
 			return false;
 		},
 
@@ -212,12 +212,12 @@ PyGDExtensionClassCreationInfo::operator GDExtensionClassCreationInfo() {
 				py::object self = py::cast(reinterpret_cast<Object*>(p_instance));
 				auto info = _get_extension_class_from_instance(self);
 
-				auto prop_list = std::make_unique<PropertyList>(info->get_property_list_func(self));
+				auto prop_list = std::make_unique<PropertyList>(info->get_property_list_func.value()(self));
 
 				*r_count = prop_list->size();
 				return *prop_list.release();
 			}
-			CATCH_EXCEPTIONS_AND_PRINT_ERRORS()
+			CATCH_EXCEPTIONS_AND_PRINT_ERRORS("While calling ClassCreationInfo.get_property_list_func")
 
 			*r_count = 0;
 			return nullptr;
@@ -236,9 +236,9 @@ PyGDExtensionClassCreationInfo::operator GDExtensionClassCreationInfo() {
 				py::object self = py::cast(reinterpret_cast<Object*>(p_instance));
 				auto info = _get_extension_class_from_instance(self);
 
-				info->free_property_list_func(self, py::object(*prop_list));
+				info->free_property_list_func.value()(self, py::object(*prop_list));
 			}
-			CATCH_EXCEPTIONS_AND_PRINT_ERRORS()
+			CATCH_EXCEPTIONS_AND_PRINT_ERRORS("While calling ClassCreationInfo.free_property_list_func")
 		},
 
 
@@ -251,7 +251,7 @@ PyGDExtensionClassCreationInfo::operator GDExtensionClassCreationInfo() {
 					py::object self = py::cast(reinterpret_cast<Object*>(p_instance));
 					auto info = _get_extension_class_from_instance(self);
 
-					auto res = info->property_can_revert_func(self, cast(p_name)).cast<py::bool_>();
+					auto res = info->property_can_revert_func.value()(self, cast(p_name)).cast<py::bool_>();
 					return static_cast<bool>(res);
 				}
 				catch(const py::error_already_set& exception) {
@@ -260,7 +260,7 @@ PyGDExtensionClassCreationInfo::operator GDExtensionClassCreationInfo() {
 					}
 				}
 			}
-			CATCH_EXCEPTIONS_AND_PRINT_ERRORS()
+			CATCH_EXCEPTIONS_AND_PRINT_ERRORS("While calling ClassCreationInfo.property_can_revert_func")
 			return false;
 		},
 
@@ -274,7 +274,7 @@ PyGDExtensionClassCreationInfo::operator GDExtensionClassCreationInfo() {
 					py::object self = py::cast(reinterpret_cast<Object*>(p_instance));
 					auto info = _get_extension_class_from_instance(self);
 
-					cast(r_ret) = info->property_get_revert_func(self, cast(p_name));
+					cast(r_ret) = info->property_get_revert_func.value()(self, cast(p_name));
 					return true;
 				}
 				catch(const py::error_already_set& exception) {
@@ -283,7 +283,7 @@ PyGDExtensionClassCreationInfo::operator GDExtensionClassCreationInfo() {
 					}
 				}
 			}
-			CATCH_EXCEPTIONS_AND_PRINT_ERRORS()
+			CATCH_EXCEPTIONS_AND_PRINT_ERRORS("While calling ClassCreationInfo.property_get_revert_func")
 			return false;
 		},
 
@@ -323,15 +323,10 @@ PyGDExtensionClassCreationInfo::operator GDExtensionClassCreationInfo() {
 
 				auto& self = *reinterpret_cast<PyGDExtensionClassCreationInfo*>(userdata);
 
-				return py::cast<Object&>(self.create_instance_func());
+				return py::cast<Object&>(self.create_instance_func.value()());
 
 			}
-			CATCH_EXCEPTIONS_AND_PRINT_ERRORS(/*[func]() {
-				return py::str("While calling: ") + (func
-					? py::str(get_fully_qualified_name(func))
-					: py::str("unknown vertual method")
-				);
-			}*/)
+			CATCH_EXCEPTIONS_AND_PRINT_ERRORS("While calling ClassCreationInfo.create_instance_func")
 
 			return nullptr;
 		},
@@ -359,7 +354,7 @@ PyGDExtensionClassCreationInfo::operator GDExtensionClassCreationInfo() {
 					return nullptr;
 				}
 
-				py::object func = self.get_virtual_func(name_str);
+				py::object func = self.get_virtual_func.value()(name_str);
 
 				if(!func || func.is_none()) {
 					return nullptr;
@@ -395,7 +390,7 @@ PyGDExtensionClassCreationInfo::operator GDExtensionClassCreationInfo() {
 
 				return call_virtuals[num_virt_funcs++];
 			}
-			CATCH_EXCEPTIONS_AND_PRINT_ERRORS()
+			CATCH_EXCEPTIONS_AND_PRINT_ERRORS("While calling ClassCreationInfo.get_virtual_func")
 			return nullptr;
 		},
 

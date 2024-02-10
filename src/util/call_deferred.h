@@ -32,7 +32,7 @@ public:
 
 
 template<typename Func>
-static deferred_call_t& call_deferred(Func&& func) {
+deferred_call_t& call_deferred(Func&& func) {
 	auto* ptr = new deferred_call_t(std::forward<Func>(func));
 
 	GDExtensionCallableCustomInfo info = {

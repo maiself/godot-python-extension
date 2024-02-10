@@ -113,7 +113,7 @@ PyGDExtensionScriptInstanceInfo::operator const GDExtensionScriptInstanceInfo&()
 			try {
 				try {
 					auto [info, self] = *reinterpret_cast<ScriptInstanceData*>(p_instance);
-					auto res = info->set_func(self, cast(p_name), cast(p_value)).cast<py::bool_>();
+					auto res = info->set_func.value()(self, cast(p_name), cast(p_value)).cast<py::bool_>();
 					return static_cast<bool>(res);
 				}
 				catch(const py::error_already_set& exception) {
@@ -122,7 +122,7 @@ PyGDExtensionScriptInstanceInfo::operator const GDExtensionScriptInstanceInfo&()
 					}
 				}
 			}
-			CATCH_EXCEPTIONS_AND_PRINT_ERRORS()
+			CATCH_EXCEPTIONS_AND_PRINT_ERRORS("While calling ScriptInstanceInfo.set_func")
 			return false;
 		},
 
@@ -132,7 +132,7 @@ PyGDExtensionScriptInstanceInfo::operator const GDExtensionScriptInstanceInfo&()
 			try {
 				try {
 					auto [info, self] = *reinterpret_cast<ScriptInstanceData*>(p_instance);
-					cast(r_ret) = info->get_func(self, cast(p_name));
+					cast(r_ret) = info->get_func.value()(self, cast(p_name));
 					return true;
 				}
 				catch(const py::error_already_set& exception) {
@@ -141,7 +141,7 @@ PyGDExtensionScriptInstanceInfo::operator const GDExtensionScriptInstanceInfo&()
 					}
 				}
 			}
-			CATCH_EXCEPTIONS_AND_PRINT_ERRORS()
+			CATCH_EXCEPTIONS_AND_PRINT_ERRORS("While calling ScriptInstanceInfo.get_func")
 			return false;
 		},
 
@@ -152,12 +152,12 @@ PyGDExtensionScriptInstanceInfo::operator const GDExtensionScriptInstanceInfo&()
 			try {
 				auto [info, self] = *reinterpret_cast<ScriptInstanceData*>(p_instance);
 
-				auto prop_list = std::make_unique<PropertyList>(info->get_property_list_func(self));
+				auto prop_list = std::make_unique<PropertyList>(info->get_property_list_func.value()(self));
 
 				*r_count = prop_list->size();
 				return *prop_list.release();
 			}
-			CATCH_EXCEPTIONS_AND_PRINT_ERRORS()
+			CATCH_EXCEPTIONS_AND_PRINT_ERRORS("While calling ScriptInstanceInfo.get_property_list_func")
 
 			*r_count = 0;
 			return nullptr;
@@ -175,9 +175,9 @@ PyGDExtensionScriptInstanceInfo::operator const GDExtensionScriptInstanceInfo&()
 
 				auto [info, self] = *reinterpret_cast<ScriptInstanceData*>(p_instance);
 
-				info->free_property_list_func(self, py::object(*prop_list));
+				info->free_property_list_func.value()(self, py::object(*prop_list));
 			}
-			CATCH_EXCEPTIONS_AND_PRINT_ERRORS()
+			CATCH_EXCEPTIONS_AND_PRINT_ERRORS("While calling ScriptInstanceInfo.free_property_list_func")
 		},
 
 		.property_can_revert_func = [](GDExtensionScriptInstanceDataPtr p_instance, GDExtensionConstStringNamePtr p_name) -> GDExtensionBool
@@ -186,7 +186,7 @@ PyGDExtensionScriptInstanceInfo::operator const GDExtensionScriptInstanceInfo&()
 			try {
 				try {
 					auto [info, self] = *reinterpret_cast<ScriptInstanceData*>(p_instance);
-					auto res = info->property_can_revert_func(self, cast(p_name)).cast<py::bool_>();
+					auto res = info->property_can_revert_func.value()(self, cast(p_name)).cast<py::bool_>();
 					return static_cast<bool>(res);
 				}
 				catch(const py::error_already_set& exception) {
@@ -195,7 +195,7 @@ PyGDExtensionScriptInstanceInfo::operator const GDExtensionScriptInstanceInfo&()
 					}
 				}
 			}
-			CATCH_EXCEPTIONS_AND_PRINT_ERRORS()
+			CATCH_EXCEPTIONS_AND_PRINT_ERRORS("While calling ScriptInstanceInfo.property_can_revert_func")
 			return false;
 		},
 
@@ -205,7 +205,7 @@ PyGDExtensionScriptInstanceInfo::operator const GDExtensionScriptInstanceInfo&()
 			try {
 				try {
 					auto [info, self] = *reinterpret_cast<ScriptInstanceData*>(p_instance);
-					cast(r_ret) = info->property_get_revert_func(self, cast(p_name));
+					cast(r_ret) = info->property_get_revert_func.value()(self, cast(p_name));
 					return true;
 				}
 				catch(const py::error_already_set& exception) {
@@ -214,7 +214,7 @@ PyGDExtensionScriptInstanceInfo::operator const GDExtensionScriptInstanceInfo&()
 					}
 				}
 			}
-			CATCH_EXCEPTIONS_AND_PRINT_ERRORS()
+			CATCH_EXCEPTIONS_AND_PRINT_ERRORS("While calling ScriptInstanceInfo.property_get_revert_func")
 			return false;
 		},
 
@@ -223,10 +223,10 @@ PyGDExtensionScriptInstanceInfo::operator const GDExtensionScriptInstanceInfo&()
 			py::gil_scoped_acquire gil;
 			try {
 				auto [info, self] = *reinterpret_cast<ScriptInstanceData*>(p_instance);
-				auto* obj = info->get_owner_func(self).cast<Object*>();
+				auto* obj = info->get_owner_func.value()(self).cast<Object*>();
 				return static_cast<GDExtensionObjectPtr>(*obj);
 			}
-			CATCH_EXCEPTIONS_AND_PRINT_ERRORS()
+			CATCH_EXCEPTIONS_AND_PRINT_ERRORS("While calling ScriptInstanceInfo.get_owner_func")
 			return nullptr;
 		},
 
@@ -256,7 +256,8 @@ PyGDExtensionScriptInstanceInfo::operator const GDExtensionScriptInstanceInfo&()
 			try {
 				try {
 					auto [info, self] = *reinterpret_cast<ScriptInstanceData*>(p_instance);
-					auto res = info->get_property_type_func(self, cast(p_name)).cast<GDExtensionVariantType>();
+					auto res = info->get_property_type_func.value()(self,
+						cast(p_name)).cast<GDExtensionVariantType>();
 					*r_is_valid = true;
 					return res;
 				}
@@ -266,7 +267,7 @@ PyGDExtensionScriptInstanceInfo::operator const GDExtensionScriptInstanceInfo&()
 					}
 				}
 			}
-			CATCH_EXCEPTIONS_AND_PRINT_ERRORS()
+			CATCH_EXCEPTIONS_AND_PRINT_ERRORS("While calling ScriptInstanceInfo.get_property_type_func")
 
 			*r_is_valid = false;
 			return GDEXTENSION_VARIANT_TYPE_NIL;
@@ -278,10 +279,10 @@ PyGDExtensionScriptInstanceInfo::operator const GDExtensionScriptInstanceInfo&()
 
 			try {
 				auto [info, self] = *reinterpret_cast<ScriptInstanceData*>(instance);
-				py::bool_ res = info->has_method_func(self, cast(name));
+				py::bool_ res = info->has_method_func.value()(self, cast(name));
 				return static_cast<bool>(res);
 			}
-			CATCH_EXCEPTIONS_AND_PRINT_ERRORS()
+			CATCH_EXCEPTIONS_AND_PRINT_ERRORS("While calling ScriptInstanceInfo.has_method_func")
 
 			return false;
 		},
@@ -299,7 +300,7 @@ PyGDExtensionScriptInstanceInfo::operator const GDExtensionScriptInstanceInfo&()
 			try {
 				try {
 					auto [info, self] = *reinterpret_cast<ScriptInstanceData*>(instance);
-					cast(res) = info->call_func(self, cast(method), *cast(args, argument_count));
+					cast(res) = info->call_func.value()(self, cast(method), *cast(args, argument_count));
 					return;
 				}
 				catch(const py::error_already_set& exception) {
@@ -308,7 +309,7 @@ PyGDExtensionScriptInstanceInfo::operator const GDExtensionScriptInstanceInfo&()
 					}
 				}
 			}
-			CATCH_EXCEPTIONS_AND_PRINT_ERRORS()
+			CATCH_EXCEPTIONS_AND_PRINT_ERRORS("While calling ScriptInstanceInfo.call_func")
 
 			if(error) {
 				error->error = GDEXTENSION_CALL_ERROR_INVALID_METHOD; // XXX
@@ -320,10 +321,10 @@ PyGDExtensionScriptInstanceInfo::operator const GDExtensionScriptInstanceInfo&()
 			py::gil_scoped_acquire gil;
 			try {
 				auto [info, self] = *reinterpret_cast<ScriptInstanceData*>(instance);
-				info->notification_func(self, what);
+				info->notification_func.value()(self, what);
 				return;
 			}
-			CATCH_EXCEPTIONS_AND_PRINT_ERRORS()
+			CATCH_EXCEPTIONS_AND_PRINT_ERRORS("While calling ScriptInstanceInfo.notification_func")
 		},
 
 		.to_string_func = [](GDExtensionScriptInstanceDataPtr instance,
@@ -332,11 +333,11 @@ PyGDExtensionScriptInstanceInfo::operator const GDExtensionScriptInstanceInfo&()
 			py::gil_scoped_acquire gil;
 			try {
 				auto [info, self] = *reinterpret_cast<ScriptInstanceData*>(instance);
-				cast(out) = info->to_string_func(self);
+				cast(out) = info->to_string_func.value()(self);
 				*is_valid = true;
 				return;
 			}
-			CATCH_EXCEPTIONS_AND_PRINT_ERRORS()
+			CATCH_EXCEPTIONS_AND_PRINT_ERRORS("While calling ScriptInstanceInfo.to_string_func")
 			*is_valid = false;
 		},
 
@@ -358,10 +359,10 @@ PyGDExtensionScriptInstanceInfo::operator const GDExtensionScriptInstanceInfo&()
 			py::gil_scoped_acquire gil;
 			try {
 				auto [info, self] = *reinterpret_cast<ScriptInstanceData*>(p_instance);
-				auto* obj = info->get_script_func(self).cast<Object*>();
+				auto* obj = info->get_script_func.value()(self).cast<Object*>();
 				return static_cast<GDExtensionObjectPtr>(*obj);
 			}
-			CATCH_EXCEPTIONS_AND_PRINT_ERRORS()
+			CATCH_EXCEPTIONS_AND_PRINT_ERRORS("While calling ScriptInstanceInfo.get_script_func")
 			return nullptr;
 		},
 
@@ -377,11 +378,11 @@ PyGDExtensionScriptInstanceInfo::operator const GDExtensionScriptInstanceInfo&()
 			py::gil_scoped_acquire gil;
 			try {
 				auto [info, self] = *reinterpret_cast<ScriptInstanceData*>(p_instance);
-				auto* obj = info->get_language_func(self).cast<Object*>();
+				auto* obj = info->get_language_func.value()(self).cast<Object*>();
 				return reinterpret_cast<GDExtensionScriptLanguagePtr>( // XXX
 					static_cast<GDExtensionObjectPtr>(*obj));
 			}
-			CATCH_EXCEPTIONS_AND_PRINT_ERRORS()
+			CATCH_EXCEPTIONS_AND_PRINT_ERRORS("While calling ScriptInstanceInfo.get_language_func")
 			return nullptr;
 		},
 
@@ -393,9 +394,9 @@ PyGDExtensionScriptInstanceInfo::operator const GDExtensionScriptInstanceInfo&()
 				delete reinterpret_cast<ScriptInstanceData*>(p_instance);
 
 				auto& [info, self] = instance_data;
-				info->free_func(self);
+				info->free_func.value()(self);
 			}
-			CATCH_EXCEPTIONS_AND_PRINT_ERRORS()
+			CATCH_EXCEPTIONS_AND_PRINT_ERRORS("While calling ScriptInstanceInfo.free_func")
 		},
 	};
 

@@ -13,7 +13,7 @@ namespace pygodot {
 
 
 namespace py = pybind11;
-	
+
 
 class PyGDExtensionClassMethodInfo {
 	class CachedData;
@@ -22,10 +22,10 @@ class PyGDExtensionClassMethodInfo {
 
 public:
 	StringName name;
-	py::object method_userdata;
+	py::object method_userdata = py::none();
 
-	py::function call_func;
-	//py::function ptrcall_func; // not used
+	nullable_py_function call_func;
+	//nullable_py_function ptrcall_func; // not used
 
 	GDExtensionClassMethodFlags method_flags;
 

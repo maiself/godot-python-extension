@@ -9,6 +9,9 @@ namespace pygodot {
 namespace py = pybind11;
 
 
+typedef std::optional<py::function> nullable_py_function;
+
+
 py::object resolve_name(py::str name);
 
 

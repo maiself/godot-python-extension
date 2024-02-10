@@ -9,9 +9,6 @@ from . import script_utils
 
 class _script_instance_info_meta(type(gde.GDExtensionScriptInstanceInfo)):
 	def __new__(cls, name, bases, namespace):
-		# XXX: pybind11 complains about `None`, use `type(None)` instead
-		cleared = type(None)
-
 		res_type = bases[0]
 
 		try:
@@ -21,7 +18,7 @@ class _script_instance_info_meta(type(gde.GDExtensionScriptInstanceInfo)):
 		else:
 			# if is an existing object, clear members
 			for attr_name in (name for name in dir(res_type) if not name.startswith('__')):
-				setattr(res, attr_name, cleared)
+				setattr(res, attr_name, None)
 
 		def wrap(func): # XXX
 			import sys, functools
@@ -44,7 +41,7 @@ class _script_instance_info_meta(type(gde.GDExtensionScriptInstanceInfo)):
 			except Exception:
 				value = None
 
-			if not value or value is cleared:
+			if not value or value is None:
 				def make_func(attr_name):
 					def func(*args, **kwargs):
 						raise NotImplementedError(

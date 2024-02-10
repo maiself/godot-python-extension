@@ -25,7 +25,13 @@ public:
         static_assert(std::is_same_v<C, type> || std::is_base_of_v<C, type>);
 
 		pointer_getters.push_back([pm](type& self) -> PyObject*& {
-			return (self.*pm).ptr();
+			if constexpr(is_optional_v<D>) {
+				static PyObject* null = nullptr;
+				return (self.*pm) ? (self.*pm)->ptr() : null;
+			}
+			else {
+				return (self.*pm).ptr();
+			}
 		});
 
 		member_clearers.push_back([pm](type& self) {

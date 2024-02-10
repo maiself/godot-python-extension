@@ -94,17 +94,17 @@ PyGDExtensionClassMethodInfo::operator GDExtensionClassMethodInfo() {
 			try {
 				if(method_info.method_flags & GDEXTENSION_METHOD_FLAG_STATIC) {
 					cast(res)
-						= method_info.call_func(*cast(args, argument_count)); // XXX: cast info
+						= method_info.call_func.value()(*cast(args, argument_count)); // XXX: cast info
 				}
 				else {
 					py::object self = py::cast(reinterpret_cast<Object*>(instance));
 					cast(res)
-						= method_info.call_func(self, *cast(args, argument_count)); // XXX: cast info
+						= method_info.call_func.value()(self, *cast(args, argument_count)); // XXX: cast info
 				}
 				return;
 			}
 			CATCH_EXCEPTIONS_AND_PRINT_ERRORS(
-				"While calling: " + get_fully_qualified_name(method_info.call_func))
+				"While calling: " + get_fully_qualified_name(method_info.call_func.value_or(py::none())))
 
 			//cast(res, get_return_cast_info(method_info)) = py::object(); // XXX
 
@@ -124,17 +124,17 @@ PyGDExtensionClassMethodInfo::operator GDExtensionClassMethodInfo() {
 			try {
 				if(method_info.method_flags & GDEXTENSION_METHOD_FLAG_STATIC) {
 					cast(res, get_return_cast_info(method_info)) // XXX: cache
-						= method_info.call_func(*cast(args, get_arguments_cast_info(method_info)));
+						= method_info.call_func.value()(*cast(args, get_arguments_cast_info(method_info)));
 				}
 				else {
 					py::object self = py::cast(reinterpret_cast<Object*>(p_instance));
 					cast(res, get_return_cast_info(method_info)) // XXX: cache
-						= method_info.call_func(self, *cast(args, get_arguments_cast_info(method_info)));
+						= method_info.call_func.value()(self, *cast(args, get_arguments_cast_info(method_info)));
 				}
 				return;
 			}
 			CATCH_EXCEPTIONS_AND_PRINT_ERRORS(
-				"While calling: " + get_fully_qualified_name(method_info.call_func))
+				"While calling: " + get_fully_qualified_name(method_info.call_func.value_or(py::none())))
 
 			cast(res, get_return_cast_info(method_info)) = py::object(); // XXX
 		},
