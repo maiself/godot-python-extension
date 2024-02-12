@@ -271,7 +271,7 @@ def load_api_data(data: bytes | str | None = None) -> Namespace:
 				# XXX: if the file doesn't exist in the module directory try to find it
 				# in the project's extern directory
 
-				project_root = pathlib.Path(__file__).parent.parent.parent.parent
+				project_root = pathlib.Path(__file__).resolve().parent.parent.parent.parent
 				gdextension_dir = project_root / 'extern' / 'gdextension'
 
 				if not gdextension_dir.exists():
