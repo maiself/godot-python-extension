@@ -120,6 +120,8 @@ def bind_method(cls, type_info, method_info, with_docs=True):
 	is_variant_type = not is_utility and (utils.variant_type_name_to_enum(type_info.name, None)
 		not in (None, godot.Variant.Type.TYPE_OBJECT))
 
+	method_name = keyword_sanitize_identifier(method_info.name)
+
 	if is_utility:
 		get_method = gde.variant_get_ptr_utility_function
 	else:
@@ -226,7 +228,7 @@ def bind_method(cls, type_info, method_info, with_docs=True):
 			decorators.append('@staticmethod')
 
 		method_code = textwrap.dedent(f'''
-				def {method_info.name}({', '.join(arg_docs)}){ret_doc}:
+				def {method_name}({', '.join(arg_docs)}){ret_doc}:
 					return {method_impl_name}({', '.join(arg_names)})
 			''').lstrip()
 
@@ -241,41 +243,41 @@ def bind_method(cls, type_info, method_info, with_docs=True):
 		)
 
 		if is_utility:
-			full_method_name = f'{method_info.name}'
+			full_method_name = f'{method_name}'
 		else:
-			full_method_name = f'{type_info.name}.{method_info.name}'
+			full_method_name = f'{type_info.name}.{method_name}'
 
 		with utils.exception_note(
 			lambda: f'While binding method \'{full_method_name}\' with code:\n' + method_code
 		):
 			exec(compile(method_code, f'<godot.{full_method_name}>', 'exec'), namespace)
 
-		method = namespace.get(method_info.name)
+		method = namespace.get(method_name)
 
 		if is_utility:
 			method.__module__ = 'godot'
-			method.__name__ = method_info.name
-			method.__qualname__ = method_info.name
+			method.__name__ = method_name
+			method.__qualname__ = method_name
 
 		else:
 			method.__module__ = cls.__module__
-			method.__name__ = method_info.name
-			method.__qualname__ = f'{cls.__qualname__}.{method_info.name}'
+			method.__name__ = method_name
+			method.__qualname__ = f'{cls.__qualname__}.{method_name}'
 
 			#method.__annotations__ = {'name': str}
 			#method.__doc__ = f'godot {type_info.name} method'
-			#method.__text_signature__ = f'''{method_info.name}({', '.join(arg_docs)}){ret_doc}'''
+			#method.__text_signature__ = f'''{method_name}({', '.join(arg_docs)}){ret_doc}'''
 			#method.__signature__ = None
 
 		if docs := method_info.get('documentation'):
 			method.__doc__ = doc_utils.reformat_doc_bbcode(docs)
 
-	setattr(cls, method_info.name, method)
+	setattr(cls, method_name, method)
 
 	if is_utility:
-		utils.set_method_info(f'godot', method_info.name, class_method_info)
+		utils.set_method_info(f'godot', method_name, class_method_info)
 	else:
-		utils.set_method_info(f'godot.{type_info.name}', method_info.name, class_method_info)
+		utils.set_method_info(f'godot.{type_info.name}', method_name, class_method_info)
 
 
 @utils.with_context
