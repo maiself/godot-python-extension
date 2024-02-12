@@ -109,6 +109,8 @@ class ArrayMeta(type(ArrayBase)):
 
 		ns.__module__ = ArrayBase.__module__
 
+		ns.__doc__ = godot.Array.__doc__
+
 		ns._element_type = element_type
 
 		#ns._variant_type = utils.variant_enum_from_type_inferred(element_type) if element_type else None

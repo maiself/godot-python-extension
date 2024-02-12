@@ -579,6 +579,9 @@ class ScriptTypeInfo(ObjectTypeInfo):
 				raise TypeError(f'')
 			return getattr(cls, '_extension_class', None) or getattr(cls, '_godot_class', godot.Object)
 
+		if not hasattr(godot, '_python_extension'):
+			raise TypeError
+
 		from godot._python_extension.python_script import PythonScript # XXX
 
 		class_name = _most_derived_non_script_base(type_object).__name__ # XXX: use exposed name

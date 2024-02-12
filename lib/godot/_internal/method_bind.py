@@ -269,7 +269,7 @@ def bind_method(cls, type_info, method_info, with_docs=True):
 			#method.__text_signature__ = f'''{method_name}({', '.join(arg_docs)}){ret_doc}'''
 			#method.__signature__ = None
 
-		if docs := method_info.get('documentation'):
+		if docs := method_info.get('description'):
 			method.__doc__ = doc_utils.reformat_doc_bbcode(docs)
 
 	setattr(cls, method_name, method)

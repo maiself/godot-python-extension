@@ -8,6 +8,7 @@ import godot
 
 from . import utils
 from .utils import class_set_attr
+from .utils import doc_utils
 
 from .api_info import api
 
@@ -134,7 +135,13 @@ def bind_variant_type(type_info):
 
 	# XXX
 
+	doc_cls = cls
 
+	if type_info.name == 'Array': # XXX
+		doc_cls = godot.Array
+
+	if docs := '\n'.join((type_info.get('brief_description', ''), type_info.get('description', ''))).strip():
+		doc_cls.__doc__ = doc_utils.reformat_doc_bbcode(docs)
 
 	#print_doc(cls)
 	return cls
@@ -347,6 +354,9 @@ def bind_class(class_info):
 		)
 
 		class_set_attr(cls, signal_info.name, signal_prop)
+
+	if docs := '\n'.join((class_info.get('brief_description', ''), class_info.get('description', ''))).strip():
+		cls.__doc__ = doc_utils.reformat_doc_bbcode(docs)
 
 	_class_bindings_in_progress.remove(class_info.name)
 
