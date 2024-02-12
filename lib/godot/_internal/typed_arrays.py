@@ -22,6 +22,9 @@ def _mimic_and_replace_base(cls):
 	return cls
 
 
+_ArrayBase = godot.Array
+
+
 @_mimic_and_replace_base
 class ArrayBase(godot.Array):
 	def __str__(self):
@@ -50,10 +53,6 @@ def _get_typed_array_type(params) -> type:
 
 @atexit.register
 def _clear_array_type_cache():
-	for type_ in ArrayMeta._type_cache.values():
-		type_._array_type_params = None
-		type_._set_as_typed = None
-
 	ArrayMeta._type_cache.clear()
 
 
@@ -116,13 +115,6 @@ class ArrayMeta(type(ArrayBase)):
 		#ns._object_class = '' # TODO
 		#ns._script_type = None # TODO
 
-		if element_type:
-			ns._array_type_params = utils.full_type_description(element_type)
-		else:
-			ns._array_type_params = property(_get_array_type_params)
-			ns._set_as_typed = lambda self: setattr(self, '__class__',
-				_get_typed_array_type(self._array_type_params))
-
 		ns._implicit_casts = True
 
 		#print('\033[91;1m__getitem__\033[0m', element_type)
@@ -133,7 +125,7 @@ class ArrayMeta(type(ArrayBase)):
 		return array_type
 
 	@utils.with_context
-	def __call__(cls, *args):
+	def __call__(cls, *args, **kwargs):
 		meta = type(ArrayBase)
 
 		if not args:
@@ -141,13 +133,48 @@ class ArrayMeta(type(ArrayBase)):
 
 		array, args = args[0], args[1:]
 
+		if type(array) is _ArrayBase:
+			type_alias = cls
+			if type_alias is godot.Array:
+				type_alias = None
+
+			if type_alias is None and godot.Array.is_typed(array):
+				params = (
+					godot.Variant.Type(godot.Array.get_typed_builtin(array)),
+					godot.Array.get_typed_class_name(array),
+					godot.Array.get_typed_script(array)
+				)
+
+				type_alias = _get_typed_array_type(params)
+
+				if type_alias is godot.Array:
+					raise TypeError
+
+				return type_alias(array)
+
+			obj = cls.__new__(cls, array, *args, **kwargs)
+
+			try:
+				if not args:
+					godot.Array.__init__._constructors[1](obj, array)
+				else:
+					godot.Array.__init__._constructors[2](obj, array, *args)
+
+			except BaseException:
+				godot.Array.__init__._constructors[0](obj)
+				raise
+
+			return obj
+
 		if args or not isinstance(array, (ArrayBase, collections.abc.Sequence)): # XXX
 			return meta.__call__(cls, array, *args)
 
-		if getattr(array, '_element_type', None) == cls._element_type:
-			return meta.__call__(cls, array)
+		if getattr(array, '_element_type', None) == cls._element_type:# or cls._element_type is None:
+			return meta.__call__(type(array), array)
 
-		return meta.__call__(cls, array, *cls._array_type_params)#cls._variant_type, cls._object_class, cls._script_type)
+		typed_array_params = utils.full_type_description(cls._element_type)
+
+		return meta.__call__(cls, array, *typed_array_params)
 
 	@utils.with_context
 	def __subclasscheck__(cls, subclass):

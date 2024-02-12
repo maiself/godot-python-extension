@@ -395,6 +395,8 @@ def bind_variant_constructors(cls, type_info):
 	method.__name__ = '__init__'
 	method.__qualname__ = f'{cls.__qualname__}.__init__'
 
+	method._constructors = constructors
+
 	#method.__annotations__ = {'name': str}
 	#method.__doc__ = f'godot {type_info.name} method'
 	#method.__text_signature__ = f'''{method_info.name}({', '.join(arg_docs)}){ret_doc}'''

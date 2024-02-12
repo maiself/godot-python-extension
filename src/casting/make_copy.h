@@ -105,42 +105,22 @@ py::object make_copy(Pointer ptr, GDExtensionVariantType variant_type, py::handl
 				}
 			}
 
-			Type* obj_ptr;
+			if constexpr(!std::is_same_v<Type, Array>) { // XXX XXX
+				auto constructor = extension_interface::variant_get_ptr_constructor(
+					variant_type_to_enum_value<Type>, 1); // XXX
+				if(!constructor) {
+					throw std::runtime_error("invalid variant constructor");
+				}
 
-			if constexpr(std::is_same_v<Type, Array>) { // XXX XXX
-				obj = resolve_name("godot.Array")();
-				obj_ptr = py::cast<Type*>(obj);
-			}
-			else {
-				obj_ptr = new Type(uninitialized); // uninitialized variant value
+				auto* obj_ptr = new Type{uninitialized};
+				constructor(uninitialized(obj_ptr), std::array<GDExtensionConstTypePtr, 1>{val}.data());
+
 				obj = py::cast(obj_ptr, py::return_value_policy::take_ownership);
 			}
+			else {
+				static py::handle Array_ = resolve_name("godot.Array");
 
-			auto constructor = extension_interface::variant_get_ptr_constructor(
-				variant_type_to_enum_value<Type>, 1); // XXX
-			if(!constructor) {
-				throw std::runtime_error("invalid variant constructor");
-			}
-			constructor(uninitialized(obj_ptr),
-				std::array<GDExtensionConstTypePtr, 1>{val}.data());
-
-			if constexpr(std::is_same_v<Type, Array>) { // XXX
-				obj.attr("_set_as_typed")();
-				/*py::int_ v = obj.attr("get_typed_builtin")();
-
-				if(int(v) > 0) {
-					auto n = with_variant_type(GDExtensionVariantType(int(v)), []<typename T>() {
-						if constexpr(std::is_fundamental_v<T>) {
-							return variant_type_name<T>;
-						}
-						else {
-							return "godot." + variant_type_name<T>;
-						}
-					});
-					auto t = resolve_name("godot.Array[" + n + "]");
-
-					obj.attr("__class__") = t;
-				}*/
+				obj = Array_(&val);
 			}
 		}
 
@@ -225,12 +205,12 @@ auto make_copy(Pointer ptr, ObjectType obj, GDExtensionVariantType variant_type)
 				::new(&ref) Type();
 			}
 			else {
-				auto constructor = extension_interface::get_variant_from_type_constructor(variant_type);
-				if(!constructor) {
-					throw std::runtime_error("invalid variant constructor");
-				}
-
 				try {
+					auto constructor = extension_interface::get_variant_from_type_constructor(variant_type);
+					if(!constructor) {
+						throw std::runtime_error("invalid variant constructor");
+					}
+
 					constructor(uninitialized(ref), cast(obj, variant_type));
 				}
 				catch(...) {
