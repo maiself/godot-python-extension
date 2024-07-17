@@ -311,6 +311,9 @@ def parse_value_str_to_str(value: str | unspecified, type_: str) -> str | unspec
 	#with print_exceptions_and_continue():
 
 	try:
+		if type_ == 'StringName' and value.startswith('&'): # XXX
+			value = value.removeprefix('&')
+
 		res = eval(value, _parse_value_namespace) # XXX
 		return value.replace(type(res).__name__, fullname(type(res)))
 
@@ -411,6 +414,9 @@ def parse_value_str_to_value(value: str | unspecified, type_: str) -> object | u
 	#with print_exceptions_and_continue():
 
 	try:
+		if type_ == 'StringName' and value.startswith('&'): # XXX
+			value = value.removeprefix('&')
+
 		res = eval(value, _parse_value_namespace) # XXX
 
 	except TypeError:
