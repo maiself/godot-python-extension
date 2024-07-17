@@ -69,7 +69,23 @@ static struct runtime_config_t {
 			extension_interface::get_library_path(extension_interface::library,
 				uninitialized(library_path_string));
 
-			library_path = std::filesystem::path(std::string(library_path_string));
+			if(std::string(library_path_string).starts_with("res://")) {
+				// XXX: this feels very brittle...
+				// temporary solution until https://github.com/godotengine/godot/pull/94373 is merged
+				if(likely_running_from_editor) {
+					library_path = std::filesystem::absolute(std::filesystem::path(
+							std::string(library_path_string).substr(std::string("res://").size())
+						));
+				}
+				else {
+					library_path = std::filesystem::absolute(
+							project_path / std::filesystem::path(std::string(library_path_string)).filename()
+						);
+				}
+			}
+			else {
+				library_path = std::filesystem::path(std::string(library_path_string));
+			}
 		}
 
 		// `lib_dir_path`
