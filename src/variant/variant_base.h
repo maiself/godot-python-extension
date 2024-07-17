@@ -183,6 +183,7 @@ EMPTY_VARIANT_TYPE(PackedStringArray)
 EMPTY_VARIANT_TYPE(PackedVector2Array)
 EMPTY_VARIANT_TYPE(PackedVector3Array)
 EMPTY_VARIANT_TYPE(PackedColorArray)
+EMPTY_VARIANT_TYPE(PackedVector4Array)
 
 #undef EMPTY_VARIANT_TYPE
 

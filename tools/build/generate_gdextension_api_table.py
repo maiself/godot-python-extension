@@ -59,6 +59,7 @@ _variant_sizes = dict(
 	PackedVector2Array = 16,
 	PackedVector3Array = 16,
 	PackedColorArray = 16,
+	PackedVector4Array = 16,
 	Variant = 24,
 )
 

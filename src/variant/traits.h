@@ -170,6 +170,7 @@ class PackedStringArray;
 class PackedVector2Array;
 class PackedVector3Array;
 class PackedColorArray;
+class PackedVector4Array;
 
 } // namespace godot
 
@@ -218,7 +219,8 @@ using variant_type_list = type_list<
 	PackedStringArray,
 	PackedVector2Array,
 	PackedVector3Array,
-	PackedColorArray
+	PackedColorArray,
+	PackedVector4Array
 >;
 
 using variant_array_type_list = type_list<
@@ -231,7 +233,8 @@ using variant_array_type_list = type_list<
 	PackedStringArray,
 	PackedVector2Array,
 	PackedVector3Array,
-	PackedColorArray
+	PackedColorArray,
+	PackedVector4Array
 >;
 
 
@@ -416,6 +419,7 @@ using variant_array_element_type = typename std::disjunction<
 	VARIANT_ARRAY_TYPE(PackedVector2Array, Vector2)
 	VARIANT_ARRAY_TYPE(PackedVector3Array, Vector3)
 	VARIANT_ARRAY_TYPE(PackedColorArray, Color)
+	VARIANT_ARRAY_TYPE(PackedVector4Array, Vector4)
 
 #undef VARIANT_ARRAY_TYPE
 	std::true_type
