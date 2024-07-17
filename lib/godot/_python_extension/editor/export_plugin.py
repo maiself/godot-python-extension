@@ -63,7 +63,8 @@ def _get_target_platform_lib(platform, arch) -> pathlib.Path:
 			path = match_.group('path')
 
 			if path.startswith('res://'):
-				path = path.removeprefix('res://')
+				# XXX: is this the correct way to handle relative paths here?
+				path = pathlib.Path(path.removeprefix('res://'))
 			else:
 				path = gdextension_path.parent / path
 
