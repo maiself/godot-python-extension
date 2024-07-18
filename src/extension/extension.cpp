@@ -337,12 +337,86 @@ extern "C" PYBIND11_EXPORT GDExtensionBool python_extension_init(
 	extension_interface::library = library;
 	extension_interface::token = library;
 
+
+	// TODO: work this into the build system
+
+	// grep -r -h -o --color=no -E '\bextension_interface::\w+' ./src/ | sort | uniq | sed -E 's/\w+::(\w+)/\t\t"\1",/g'
+
+	std::vector<std::string> referenced_extension_apis = {
+		"callable_custom_create",
+		"callable_custom_get_userdata",
+		"classdb_construct_object",
+		"classdb_get_method_bind",
+		"classdb_register_extension_class",
+		"classdb_register_extension_class_integer_constant",
+		"classdb_register_extension_class_method",
+		"classdb_register_extension_class_property",
+		"classdb_register_extension_class_property_group",
+		"classdb_register_extension_class_property_subgroup",
+		"classdb_register_extension_class_signal",
+		"get_godot_version",
+		"get_library_path",
+		"get_variant_from_type_constructor",
+		"get_variant_to_type_constructor",
+		"global_get_singleton",
+		"godot_version",
+		"library",
+		"name",
+		"object_destroy",
+		"object_get_class_name",
+		"object_get_instance_binding",
+		"object_get_instance_id",
+		"object_method_bind_ptrcall",
+		"object_set_instance",
+		"object_set_instance_binding",
+		"packed_byte_array_operator_index_const",
+		"placeholder_script_instance_create",
+		"placeholder_script_instance_update",
+		"print_error",
+		"print_warning",
+		"ref_set_object",
+		"script_instance_create",
+		"string_new_with_utf8_chars",
+		"string_new_with_utf8_chars_and_len",
+		"string_to_utf8_chars",
+		"token",
+		"variant_call",
+		"variant_destroy",
+		"variant_get_ptr_builtin_method",
+		"variant_get_ptr_constructor",
+		"variant_get_ptr_destructor",
+		"variant_get_ptr_getter",
+		"variant_get_ptr_indexed_getter",
+		"variant_get_ptr_indexed_setter",
+		"variant_get_ptr_keyed_getter",
+		"variant_get_ptr_keyed_setter",
+		"variant_get_ptr_operator_evaluator",
+		"variant_get_ptr_setter",
+		"variant_get_ptr_utility_function",
+		"variant_get_type",
+		"variant_new_nil",
+		"variant_stringify"
+	};
+
+
 #define GDEXTENSION_API(name, type) \
-	extension_interface::name = reinterpret_cast<type>(get_proc_address(#name)); \
-	if(!extension_interface::name) { \
-		extension_interface::print_error("Unable to load GDExtension interface function " #name "()", \
-			__FUNCTION__, __FILE__, __LINE__, false); \
-		return false; \
+	if(std::find(referenced_extension_apis.begin(), referenced_extension_apis.end(), #name) \
+		!= referenced_extension_apis.end()) \
+	{ \
+		extension_interface::name = reinterpret_cast<type>(get_proc_address(#name)); \
+		if(!extension_interface::name) { \
+			extension_interface::print_error("Unable to load GDExtension interface function " #name "()", \
+				__FUNCTION__, __FILE__, __LINE__, false); \
+			return false; \
+		} \
+	} \
+	else { \
+		extension_interface::name = reinterpret_cast<type>(static_cast<void(*)()>([]() { \
+			extension_interface::print_error("Cannot call unloaded GDExtension interface function " #name "()", \
+				__FUNCTION__, __FILE__, __LINE__, false); \
+			std::fflush(stdout); \
+			std::abort(); \
+		})); \
 	}
 
 	GDEXTENSION_APIS
