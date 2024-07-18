@@ -19,6 +19,9 @@ struct extension_interface {
 	static inline GDExtensionClassLibraryPtr library;
 	static inline void* token;
 
+	// Runtime value of `GDEXTENSION_VARIANT_TYPE_VARIANT_MAX` from the currently loaded Godot version
+	static inline GDExtensionVariantType variant_type_variant_max = {};
+
 #define GDEXTENSION_API(name, type) \
 	static inline type name = nullptr;
 
@@ -29,6 +32,19 @@ struct extension_interface {
 
 
 inline std::optional<GDExtensionInitializationLevel> initialization_level;
+
+
+inline uint32_t version_to_uint(const GDExtensionGodotVersion& version) {
+	return (version.major << 16) + (version.minor << 8) + version.patch;
+}
+
+inline bool godot_version_is_at_least(const GDExtensionGodotVersion& version) {
+	return (version_to_uint(extension_interface::godot_version) >= version_to_uint(version));
+}
+
+inline bool godot_version_is_at_least(uint32_t major, uint32_t minor, uint32_t patch = 0) {
+	return godot_version_is_at_least({.major = major, .minor = minor, .patch = patch, .string = nullptr});
+}
 
 
 void register_cleanup_func(std::function<void()> func);

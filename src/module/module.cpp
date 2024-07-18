@@ -443,7 +443,9 @@ PYBIND11_EMBEDDED_MODULE(_gdextension, module_) {
 
 #define ENUM_VALUE(type, name) .value(#name, type::name)
 
-	py::enum_<GDExtensionVariantType>(module_, "GDExtensionVariantType")
+	py::enum_<GDExtensionVariantType> variant_type_enum(module_, "GDExtensionVariantType");
+
+	variant_type_enum
 		ENUM_VALUE(GDExtensionVariantType, GDEXTENSION_VARIANT_TYPE_NIL)
 		ENUM_VALUE(GDExtensionVariantType, GDEXTENSION_VARIANT_TYPE_BOOL)
 		ENUM_VALUE(GDExtensionVariantType, GDEXTENSION_VARIANT_TYPE_INT)
@@ -482,8 +484,20 @@ PYBIND11_EMBEDDED_MODULE(_gdextension, module_) {
 		ENUM_VALUE(GDExtensionVariantType, GDEXTENSION_VARIANT_TYPE_PACKED_VECTOR2_ARRAY)
 		ENUM_VALUE(GDExtensionVariantType, GDEXTENSION_VARIANT_TYPE_PACKED_VECTOR3_ARRAY)
 		ENUM_VALUE(GDExtensionVariantType, GDEXTENSION_VARIANT_TYPE_PACKED_COLOR_ARRAY)
-		ENUM_VALUE(GDExtensionVariantType, GDEXTENSION_VARIANT_TYPE_PACKED_VECTOR4_ARRAY)
-		ENUM_VALUE(GDExtensionVariantType, GDEXTENSION_VARIANT_TYPE_VARIANT_MAX)
+	;
+
+	if(godot_version_is_at_least(4, 3)) {
+		variant_type_enum
+			ENUM_VALUE(GDExtensionVariantType, GDEXTENSION_VARIANT_TYPE_PACKED_VECTOR4_ARRAY)
+		;
+	}
+
+	// NOTE: this is the only place this is set
+	extension_interface::variant_type_variant_max =
+		static_cast<GDExtensionVariantType>(variant_type_enum.attr("__members__").cast<py::dict>().size());
+
+	variant_type_enum
+		.value("GDEXTENSION_VARIANT_TYPE_VARIANT_MAX", extension_interface::variant_type_variant_max)
 		.export_values()
 	;
 

@@ -466,8 +466,12 @@ py::handle variant_type_handle(std::same_as<GDExtensionVariantType> auto type) {
 // evaluation utilities
 
 
+inline bool is_valid(GDExtensionVariantType type) {
+	return (type < extension_interface::variant_type_variant_max);
+}
+
 inline void check_valid(GDExtensionVariantType type) {
-	if(type >= GDEXTENSION_VARIANT_TYPE_VARIANT_MAX) {
+	if(!is_valid(type)) {
 		throw std::runtime_error("invalid variant type");
 	}
 }
@@ -522,6 +526,9 @@ auto with_variant_type(GDExtensionVariantType type, Func&& func) {
 
 auto variant_type_from_type_handle_exact(std::convertible_to<py::handle> auto type) {
 	return for_each_variant_type([type]<typename Type>() -> std::optional<GDExtensionVariantType> {
+		if(!is_valid(variant_type_to_enum_value<Type>)) {
+			return std::nullopt;
+		}
 		if(type.ptr() == variant_type_handle<Type>().ptr()) {
 			return variant_type_to_enum_value<Type>;
 		}
@@ -574,6 +581,9 @@ auto variant_type_from_type_handle_inferred(std::convertible_to<py::handle> auto
 	}
 
 	if(auto res = for_each_variant_type([type]<typename Type>() -> std::optional<GDExtensionVariantType> {
+			if(!is_valid(variant_type_to_enum_value<Type>)) {
+				return std::nullopt;
+			}
 			if(issubclass(type, variant_type_handle<Type>())) {
 				return variant_type_to_enum_value<Type>;
 			}

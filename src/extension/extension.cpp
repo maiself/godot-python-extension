@@ -427,10 +427,6 @@ extern "C" PYBIND11_EXPORT GDExtensionBool python_extension_init(
 
 	GDExtensionGodotVersion minium_version = {.major = 4, .minor = 2, .patch = 0, .string = nullptr};
 
-	auto version_to_uint = [](const GDExtensionGodotVersion& version) -> uint32_t {
-		return (version.major << 16) + (version.minor << 8) + version.patch;
-	};
-
 	if(version_to_uint(extension_interface::godot_version) < version_to_uint(minium_version)) {
 		char error_msg[256];
 		snprintf(error_msg, sizeof(error_msg),
