@@ -1,24 +1,32 @@
 name: Build
 
 on:
+  pull_request:
   workflow_dispatch:
     inputs:
-      python-version:
-        type: choice
-        required: true
-        default: '3.12'
-        options:
-        - 3.12
+      release:
+        type: boolean
+        required: false
+        default: false
 
 jobs:
-  linux-build:
-    name: Linux build
-    runs-on: ubuntu-latest
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '${{ inputs.python-version }}'
+          python-version: '3.12'
 
       - name: Setup SCons
         shell: bash
@@ -27,63 +35,47 @@ jobs:
           python -m pip install scons==4.4.0
           scons --version
 
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - name: Build extension
+      - name: Build extension (Linux)
+        if: matrix.os == 'ubuntu-latest'
         run: |
-          scons platform=linux single_source=true
+          scons platform=linux arch=x86_64 single_source=true
 
-      # archive to preserve execute permission on library files
-      - name: Create archive
+      - name: Build extension (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          scons platform=windows arch=x86_64 single_source=true
+
+      - name: Create archive (Linux)
+        if: matrix.os == 'ubuntu-latest'
         run: |
           cd bin/
           zip -q -r ../godot-python-linux-x86_64.zip *
           cd ../
 
-      - name: Upload artifacts
+      - name: Upload artifacts (Linux)
+        if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v3
         with:
           name: godot-python-linux-x86_64
           path: godot-python*.zip
           retention-days: 30
 
-
-  windows-build:
-    name: Windows build
-    runs-on: windows-latest
-    steps:
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '${{ inputs.python-version }}'
-
-      - name: Setup SCons
-        shell: bash
-        run: |
-          python -c 'import sys; print(sys.version)'
-          python -m pip install scons==4.4.0
-          scons --version
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - name: Build extension
-        run: |
-          scons platform=windows single_source=true
-
-      - name: Upload artifacts
+      - name: Upload artifacts (Windows)
+        if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v3
         with:
           name: godot-python-windows-x86_64
-          # everything under bin/ but exclude unneeded files that get generated for some reason
           path: |
             bin/**/*
             !bin/**/*.lib
             !bin/**/*.exp
           retention-days: 30
 
+      - name: Release artifact
+        if: ${{ inputs.release }}
+        run: |
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            echo "Releasing artifact for linux"
+          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            echo "Releasing artifact for windows"
