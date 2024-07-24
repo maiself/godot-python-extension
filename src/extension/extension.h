@@ -7,6 +7,16 @@
 #include <gdextension_interface.h>
 #include "gdextension_api_table.h"
 
+#include "util/enum_types.h"
+
+
+DECLARE_ENUM_TYPE_CASTER(GDExtensionVariantType, "GDExtensionVariantType")
+DECLARE_ENUM_TYPE_CASTER(GDExtensionVariantOperator, "GDExtensionVariantOperator")
+DECLARE_ENUM_TYPE_CASTER(GDExtensionCallErrorType, "GDExtensionCallErrorType")
+DECLARE_ENUM_TYPE_CASTER(GDExtensionClassMethodFlags, "GDExtensionClassMethodFlags")
+DECLARE_ENUM_TYPE_CASTER(GDExtensionClassMethodArgumentMetadata, "GDExtensionClassMethodArgumentMetadata")
+DECLARE_ENUM_TYPE_CASTER(GDExtensionInitializationLevel, "GDExtensionInitializationLevel")
+
 
 namespace pygodot {
 

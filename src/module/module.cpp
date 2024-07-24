@@ -443,7 +443,7 @@ PYBIND11_EMBEDDED_MODULE(_gdextension, module_) {
 
 #define ENUM_VALUE(type, name) .value(#name, type::name)
 
-	py::enum_<GDExtensionVariantType> variant_type_enum(module_, "GDExtensionVariantType");
+	int_enum<GDExtensionVariantType> variant_type_enum(module_, "GDExtensionVariantType");
 
 	variant_type_enum
 		ENUM_VALUE(GDExtensionVariantType, GDEXTENSION_VARIANT_TYPE_NIL)
@@ -494,14 +494,14 @@ PYBIND11_EMBEDDED_MODULE(_gdextension, module_) {
 
 	// NOTE: this is the only place this is set
 	extension_interface::variant_type_variant_max =
-		static_cast<GDExtensionVariantType>(variant_type_enum.attr("__members__").cast<py::dict>().size());
+		static_cast<GDExtensionVariantType>(variant_type_enum.size());
 
 	variant_type_enum
 		.value("GDEXTENSION_VARIANT_TYPE_VARIANT_MAX", extension_interface::variant_type_variant_max)
 		.export_values()
 	;
 
-	py::enum_<GDExtensionVariantOperator>(module_, "GDExtensionVariantOperator")
+	int_enum<GDExtensionVariantOperator>(module_, "GDExtensionVariantOperator")
 		ENUM_VALUE(GDExtensionVariantOperator, GDEXTENSION_VARIANT_OP_EQUAL)
 		ENUM_VALUE(GDExtensionVariantOperator, GDEXTENSION_VARIANT_OP_NOT_EQUAL)
 		ENUM_VALUE(GDExtensionVariantOperator, GDEXTENSION_VARIANT_OP_LESS)
@@ -531,7 +531,7 @@ PYBIND11_EMBEDDED_MODULE(_gdextension, module_) {
 		.export_values()
 	;
 
-	py::enum_<GDExtensionCallErrorType>(module_, "GDExtensionCallErrorType")
+	int_enum<GDExtensionCallErrorType>(module_, "GDExtensionCallErrorType")
 		ENUM_VALUE(GDExtensionCallErrorType, GDEXTENSION_CALL_OK)
 		ENUM_VALUE(GDExtensionCallErrorType, GDEXTENSION_CALL_ERROR_INVALID_METHOD)
 		ENUM_VALUE(GDExtensionCallErrorType, GDEXTENSION_CALL_ERROR_INVALID_ARGUMENT)
@@ -542,7 +542,7 @@ PYBIND11_EMBEDDED_MODULE(_gdextension, module_) {
 		.export_values()
 	;
 
-	py::enum_<GDExtensionClassMethodFlags>(module_, "GDExtensionClassMethodFlags", py::arithmetic())
+	int_flag<GDExtensionClassMethodFlags>(module_, "GDExtensionClassMethodFlags")
 		ENUM_VALUE(GDExtensionClassMethodFlags, GDEXTENSION_METHOD_FLAG_NORMAL)
 		ENUM_VALUE(GDExtensionClassMethodFlags, GDEXTENSION_METHOD_FLAG_EDITOR)
 		ENUM_VALUE(GDExtensionClassMethodFlags, GDEXTENSION_METHOD_FLAG_CONST)
@@ -553,7 +553,7 @@ PYBIND11_EMBEDDED_MODULE(_gdextension, module_) {
 		.export_values()
 	;
 
-	py::enum_<GDExtensionClassMethodArgumentMetadata>(module_, "GDExtensionClassMethodArgumentMetadata")
+	int_enum<GDExtensionClassMethodArgumentMetadata>(module_, "GDExtensionClassMethodArgumentMetadata")
 		ENUM_VALUE(GDExtensionClassMethodArgumentMetadata, GDEXTENSION_METHOD_ARGUMENT_METADATA_NONE)
 		ENUM_VALUE(GDExtensionClassMethodArgumentMetadata, GDEXTENSION_METHOD_ARGUMENT_METADATA_INT_IS_INT8)
 		ENUM_VALUE(GDExtensionClassMethodArgumentMetadata, GDEXTENSION_METHOD_ARGUMENT_METADATA_INT_IS_INT16)
@@ -568,7 +568,7 @@ PYBIND11_EMBEDDED_MODULE(_gdextension, module_) {
 		.export_values()
 	;
 
-	py::enum_<GDExtensionInitializationLevel>(module_, "GDExtensionInitializationLevel")
+	int_enum<GDExtensionInitializationLevel>(module_, "GDExtensionInitializationLevel")
 		ENUM_VALUE(GDExtensionInitializationLevel, GDEXTENSION_INITIALIZATION_CORE)
 		ENUM_VALUE(GDExtensionInitializationLevel, GDEXTENSION_INITIALIZATION_SERVERS)
 		ENUM_VALUE(GDExtensionInitializationLevel, GDEXTENSION_INITIALIZATION_SCENE)

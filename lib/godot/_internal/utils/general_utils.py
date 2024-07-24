@@ -153,7 +153,7 @@ def resolve_name(name, *, context=None, use_cache=True) -> object: # XXX: assess
 		use_cache = False
 
 	if use_cache:
-		if obj := _resolved_name_cache.get(name): # XXX
+		if (obj := _resolved_name_cache.get(name)) is not None: # XXX
 			if isinstance(obj, _resolve_name_error):
 				raise obj.exception from None
 

@@ -89,7 +89,7 @@ def _get_type_object_by_registered_name(name: str) -> type: # XXX XXX
 	if name in ('bool', 'int', 'float'):
 		return getattr(builtins, name)
 
-	if type_ := variant_type_name_to_enum(name, None):
+	if (type_ := variant_type_name_to_enum(name, None)) is not None:
 		return getattr(godot, name)
 
 	if name in _get_api_classes():
@@ -305,7 +305,7 @@ class VariantTypeInfo(TypeInfo): # XXX: rename
 	@classmethod
 	@functools.cache
 	def from_api_info_type_string(cls, type_str: str) -> TypeInfo:
-		if type_ := variant_type_name_to_enum(type_str, None):
+		if (type_ := variant_type_name_to_enum(type_str, None)) is not None:
 			return cls(variant_type = type_)
 
 		raise ValueError(f'{type_str!r} is not a valid variant type')

@@ -374,31 +374,42 @@ def bind_enum(cls, enum_info):
 	enum_type = enum.IntFlag if enum_info.get('is_bitfield') else enum.IntEnum
 
 	if name.startswith('Variant.'):
-		# special handling of variant enums to mirror the same enums from gdextension
 		cls = godot.Variant
 		name = name.split('.', 1)[1]
-
-		gde_type = getattr(gde, f'GDExtensionVariant{name}')
-
-		enum_meta = type(f'Variant{name}Meta', (type(gde_type), enum.EnumType), dict(
-			__call__ = enum.EnumType.__call__,
-		))
-
-		enum_type = type.__new__(enum_meta, f'Variant{name}Enum', (enum.Enum, gde_type), dict(
-			__init__ = gde_type.__init__,
-			__str__ = lambda self: f'{qualname}.{self.name}',
-			__repr__ = lambda self: f'<{self}: {int(self.value)}>',
-		))
 
 	elif '.' in name:
 		raise NameError(f'unexpected enum type name: {name!r}')
 
+	members = {value.name: value.value for value in enum_info.get('values')}
+
 	enum_ = enum_type(
 			name,
-			{value.name: value.value for value in enum_info.get('values')},
+			members,
 			module = module,
 			qualname = qualname,
 		)
+
+	if cls is godot.Variant:
+		gde_type = getattr(gde, f'GDExtensionVariant{name}')
+		meta_base = type(gde_type)
+
+		# allow variant enums to cast to the equivalent from gdextension
+		# a meta class with subclass checks is installed on the gde type as inheriting enums isn't allowed
+		gde_type.__class__ = type(f'{gde_type.__name__}Meta', (meta_base, ), dict(
+			__subclasscheck__ =
+				lambda self, cls: meta_base.__subclasscheck__(self, cls) or cls is enum_,
+			__instancecheck__ =
+				lambda self, obj: meta_base.__instancecheck__(self, obj) or isinstance(obj, enum_),
+		))
+
+		enum_.__str__ = lambda self: f'{qualname}.{self.name}'
+		enum_.__repr__ = lambda self: f'<{self}: {int(self.value)}>'
+
+		# XXX: should members be exported?
+		#for k, v in enum_.__members__.items():
+		#	setattr(godot.Variant, k, v)
+
+	assert(not hasattr(cls, name))
 
 	class_set_attr(cls, name, enum_)
 
