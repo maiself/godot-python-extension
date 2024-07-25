@@ -1,4 +1,4 @@
-import os
+import common_compiler_flags
 from SCons.Util import WhereIs
 
 
@@ -34,11 +34,18 @@ def generate(env):
     env["SHLIBSUFFIX"] = ".wasm"
 
     # Thread support (via SharedArrayBuffer).
-    env.Append(CCFLAGS=["-s", "USE_PTHREADS=1"])
-    env.Append(LINKFLAGS=["-s", "USE_PTHREADS=1"])
+    if env["threads"]:
+        env.Append(CCFLAGS=["-sUSE_PTHREADS=1"])
+        env.Append(LINKFLAGS=["-sUSE_PTHREADS=1"])
 
     # Build as side module (shared library).
-    env.Append(CPPFLAGS=["-s", "SIDE_MODULE=1"])
-    env.Append(LINKFLAGS=["-s", "SIDE_MODULE=1"])
+    env.Append(CPPFLAGS=["-sSIDE_MODULE=1"])
+    env.Append(LINKFLAGS=["-sSIDE_MODULE=1"])
+
+    # Force wasm longjmp mode.
+    env.Append(CCFLAGS=["-sSUPPORT_LONGJMP='wasm'"])
+    env.Append(LINKFLAGS=["-sSUPPORT_LONGJMP='wasm'"])
 
     env.Append(CPPDEFINES=["WEB_ENABLED", "UNIX_ENABLED"])
+
+    common_compiler_flags.generate(env)

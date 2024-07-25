@@ -125,6 +125,11 @@ opts.Add(
 env['target'] = 'template_release'
 
 
+# default debug_symbols off
+if 'debug_symbols' not in opts.args:
+	opts.args['debug_symbols'] = 'false'
+
+
 # Targets flags tool (optimizations, debug symbols)
 target_tool = Tool("targets", toolpath=["tools/build/platform"])
 target_tool.options(opts)
@@ -139,7 +144,9 @@ build_utils.process_arch(env)
 
 
 # godot-cpp's linux toolchain config needs this set
-env['use_hot_reload'] = False
+env.use_hot_reload = False
+env['disable_exceptions'] = False
+env['symbols_visibility'] = 'hidden'
 
 
 tool = Tool(env["platform"], toolpath=["tools/build/platform"])

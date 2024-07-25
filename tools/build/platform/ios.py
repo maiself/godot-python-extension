@@ -1,18 +1,10 @@
+import codecs
 import os
-import sys
 import subprocess
-from SCons.Variables import *
+import sys
 
-if sys.version_info < (3,):
-
-    def decode_utf8(x):
-        return x
-
-else:
-    import codecs
-
-    def decode_utf8(x):
-        return codecs.utf_8_decode(x)[0]
+import common_compiler_flags
+from SCons.Variables import BoolVariable
 
 
 def has_ios_osxcross():
@@ -21,7 +13,7 @@ def has_ios_osxcross():
 
 def options(opts):
     opts.Add(BoolVariable("ios_simulator", "Target iOS Simulator", False))
-    opts.Add("ios_min_version", "Target minimum iphoneos/iphonesimulator version", "10.0")
+    opts.Add("ios_min_version", "Target minimum iphoneos/iphonesimulator version", "12.0")
     opts.Add(
         "IOS_TOOLCHAIN_PATH",
         "Path to iOS toolchain",
@@ -51,9 +43,9 @@ def generate(env):
     if sys.platform == "darwin":
         if env["IOS_SDK_PATH"] == "":
             try:
-                env["IOS_SDK_PATH"] = decode_utf8(
+                env["IOS_SDK_PATH"] = codecs.utf_8_decode(
                     subprocess.check_output(["xcrun", "--sdk", sdk_name, "--show-sdk-path"]).strip()
-                )
+                )[0]
             except (subprocess.CalledProcessError, OSError):
                 raise ValueError(
                     "Failed to find SDK path while running xcrun --sdk {} --show-sdk-path.".format(sdk_name)
@@ -104,3 +96,5 @@ def generate(env):
     env.Append(LINKFLAGS=["-isysroot", env["IOS_SDK_PATH"], "-F" + env["IOS_SDK_PATH"]])
 
     env.Append(CPPDEFINES=["IOS_ENABLED", "UNIX_ENABLED"])
+
+    common_compiler_flags.generate(env)
