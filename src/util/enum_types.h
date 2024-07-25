@@ -1,8 +1,6 @@
 #pragma once
 
-#include <unordered_map>
 #include <type_traits>
-#include <typeindex>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
@@ -16,7 +14,8 @@ namespace py = pybind11;
 
 namespace detail {
 
-inline std::unordered_map<std::type_index, py::handle> bound_enum_type_handles;
+template<typename EnumType>
+class enum_type_caster_base;
 
 
 template<typename EnumType, typename DerivedEnum>
@@ -61,7 +60,7 @@ public:
 
 		scope.attr(name) = enum_type;
 
-		bound_enum_type_handles[std::type_index(typeid(EnumType))] = enum_type;
+		enum_type_caster_base<EnumType>::enum_type_handle = enum_type;
 
 		return derived_ref();
 	}
@@ -111,16 +110,17 @@ class enum_type_caster_base {
 private:
 	using UnderlyingType = typename std::underlying_type<EnumType>::type;
 
+	static inline py::handle enum_type_handle;
+
+	template<typename EnumType_, typename DerivedEnum>
+	friend class enum_base;
+
 public:
 	static py::handle cast(EnumType src, py::return_value_policy policy, py::handle parent) {
-		auto enum_type_handle = bound_enum_type_handles.at(std::type_index(typeid(EnumType)));
-
 		return enum_type_handle(static_cast<UnderlyingType>(src)).release();
 	}
 
 	static std::optional<EnumType> load(py::handle src, bool convert) {
-		auto enum_type_handle = bound_enum_type_handles.at(std::type_index(typeid(EnumType)));
-
 		if(!py::isinstance(src, enum_type_handle)) {
 			return std::nullopt;
 		}
