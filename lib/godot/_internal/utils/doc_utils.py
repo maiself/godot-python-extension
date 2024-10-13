@@ -59,7 +59,7 @@ _replacements = {name: _remove_sgr(text) for name, text in _replacements_for_tty
 
 def reformat_doc_bbcode(text: str, for_tty: None | bool = None) -> str:
 	if for_tty is None:
-		for_tty = sys.stdout.isatty()
+		for_tty = sys.stdout.isatty() if sys.stdout else False
 
 	replacements = _replacements_for_tty if for_tty else _replacements
 
@@ -82,11 +82,9 @@ def reformat_doc_bbcode(text: str, for_tty: None | bool = None) -> str:
 		return f'{replacements.get("b", "")}{name}{replacements.get("_b", "")}'
 
 	text = re.sub(r'\[(?P<close>/)?(?P<name>[-_.\w/]+)( (?P<value>[-_.\w/]+))?\]', replace, text)
-	text = text.replace('\n', '\n\n', 1) # separate first line from the rest by one blank line
+	text = text.replace('\n', '\n\n', 1)  # Separate first line from the rest by one blank line
 
-	# TODO: urls
-	# TODO: word wrap
+	# TODO: Handle URLs
+	# TODO: Implement word wrap if necessary
 
 	return text
-
-
