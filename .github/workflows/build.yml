@@ -80,3 +80,13 @@ jobs:
             echo "Releasing artifact for linux"
           elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
             echo "Releasing artifact for windows"
+  merge:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Merge Artifacts
+        uses: actions/upload-artifact/merge@v4
+        with:
+          name: godot-python
+          pattern: godot-python-*
+          delete-merged: true
