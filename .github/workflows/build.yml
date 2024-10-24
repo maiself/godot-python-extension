@@ -16,7 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
       - name: Checkout repository
@@ -47,6 +47,11 @@ jobs:
         run: |
           scons platform=windows arch=x86_64 single_source=true
 
+      - name: Build extension (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          scons platform=macos arch=universal single_source=true
+
       - name: Create archive (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
@@ -73,6 +78,17 @@ jobs:
             !bin/**/*.exp
           retention-days: 30
 
+      - name: Upload artifacts (macOS)
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v3
+        with:
+          name: godot-python-macos-universal
+          path: |
+            bin/**/*
+            !bin/**/*.lib
+            !bin/**/*.exp
+          retention-days: 30
+
       - name: Release artifact
         if: ${{ inputs.release }}
         run: |
@@ -80,3 +96,5 @@ jobs:
             echo "Releasing artifact for linux"
           elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
             echo "Releasing artifact for windows"
+          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            echo "Releasing artifact for macOS"
