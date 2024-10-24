@@ -13,6 +13,13 @@ from SCons.Errors import UserError
 
 from tools.build import build_utils
 
+def validate_parent_dir(key, val, env):
+    if not os.path.isdir(normalize_path(os.path.dirname(val), env)):
+        raise UserError("'%s' is not a directory: %s" % (key, os.path.dirname(val)))
+
+def normalize_path(val, env):
+    return val if os.path.isabs(val) else os.path.join(env.Dir("#").abspath, val)
+
 
 EnsureSConsVersion(4, 0)
 
@@ -59,6 +66,23 @@ opts.Add(
 		default=env.get("precision", "single"),
 		allowed_values=("single", "double"),
 	)
+)
+
+opts.Add(
+    BoolVariable(
+        key="compiledb",
+        help="Generate compilation DB (`compile_commands.json`) for external tools",
+        default=env.get("compiledb", False),
+    )
+)
+
+opts.Add(
+    PathVariable(
+        key="compiledb_file",
+        help="Path to a custom `compile_commands.json` file",
+        default=env.get("compiledb_file", "compile_commands.json"),
+        validator=validate_parent_dir,
+    )
 )
 
 
@@ -383,6 +407,8 @@ env.AlwaysBuild(append_python_config)
 
 env.Depends(sources, append_python_config)
 
+env.Tool("compilation_db")
+env.Alias("compiledb", env.CompilationDatabase(normalize_path(env["compiledb_file"], env)))
 
 # library name
 suffix = ".{}".format(env["platform"])
