@@ -10,6 +10,7 @@
 #ifdef UNIX_ENABLED
 #include <dlfcn.h>
 #include <unistd.h>
+#include <cstdlib>
 #endif
 
 #ifdef WINDOWS_ENABLED
@@ -29,8 +30,10 @@ namespace pygodot {
 void system_quick_exit(int status) {
 #ifdef WINDOWS_ENABLED
 	TerminateProcess(GetCurrentProcess(), status);
-#else
+#elif defined(_GLIBCXX_HAVE_QUICK_EXIT)
 	std::quick_exit(status);
+#else
+	std::_Exit(status);
 #endif
 }
 

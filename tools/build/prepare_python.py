@@ -59,6 +59,19 @@ add_platform_config(
 	executable = 'python.exe',
 )
 
+add_platform_config(
+	platform = 'macos',
+	arch = 'universal',
+	source_url = 'https://github.com/indygreg/python-build-standalone/releases/download/'
+		'20231002/cpython-3.12.0+20231002-x86_64-apple-darwin-install_only.tar.gz',
+	so_suffixes = ['.os'],
+	ext_suffixes = ['.os'],
+	so_path = 'lib/libpython3.12.dylib',
+	python_lib_dir = 'lib/python3.12',
+	python_ext_dir = 'lib/python3.12/lib-dynload',
+	executable = 'bin/python3.12',
+)
+
 
 def fetch_python_for_platform(platform: str, arch: str, dest_dir: pathlib.Path):
 	config = platform_configs[(platform, arch)]
@@ -84,7 +97,10 @@ def prepare_for_platform(platform: str, arch: str,
 	dest_dir.mkdir(parents=True, exist_ok=True)
 
 	shutil.copy2(src / config.so_path, dest_dir)
-	subprocess.run(['strip', '-s', str(dest_dir / pathlib.Path(config.so_path).name)], check=True)
+	if platform == 'macos':
+		subprocess.run(['strip', '-x', str(dest_dir / pathlib.Path(config.so_path).name)], check=True)
+	else:
+		subprocess.run(['strip', '-s', str(dest_dir / pathlib.Path(config.so_path).name)], check=True)
 
 	if (src / config.python_ext_dir).exists():
 		dest_ext_dir = dest_dir / 'python3.12' / 'lib-dynload'

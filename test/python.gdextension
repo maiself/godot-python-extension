@@ -5,7 +5,7 @@ entry_symbol = "python_extension_init"
 
 [libraries]
 
-macos = "res://bin/macos/libgodot-python.macos.framework"
+macos = "res://bin/macos/libgodot-python.macos.universal.dylib"
 
 windows.x86_32 = "res://bin/windows-x86_32/libgodot-python.windows.x86_32.dll"
 windows.x86_64 = "res://bin/windows-x86_64/libgodot-python.windows.x86_64.dll"
