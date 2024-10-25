@@ -105,11 +105,15 @@ using concat_type_lists = typename _concat_type_lists<Ls...>::type;
 
 
 template<template<typename...> typename Template, typename TypeList>
-using apply_type_list = decltype([]<typename... Ts>(type_list<Ts...>)
-	-> Template<Ts...>
-{
-	return std::declval<Template<Ts...>>();
-}(TypeList{}));
+struct _apply_type_list;
+
+template<template<typename...> typename Template, typename... Ts>
+struct _apply_type_list<Template, type_list<Ts...>> {
+	using type = Template<Ts...>;
+};
+
+template<template<typename...> typename Template, typename TypeList>
+using apply_type_list = typename _apply_type_list<Template, TypeList>::type;
 
 
 template<typename T, typename... Ts>
