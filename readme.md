@@ -1,6 +1,6 @@
 # godot-python-extension
 
-> **Warning**
+> [!WARNING]  
 >
 > This repository is a work in progress and should be considered experimental. It is not production ready.
 >
@@ -28,7 +28,7 @@ This project can be thought as having three layers:
 
 ## Building
 
-> **Note**
+> [!NOTE]
 >
 > Godot version 4.2 or later is required to build and load this extension.
 
@@ -46,7 +46,7 @@ scons godot=<PATH_TO_GODOT_BINARY>
 
 The path to the `godot` binary is needed to extract the `gdextension_interface.h` and `extension_api.json` files from the engine. The built extension shared object will be placed in `bin/`.
 
-> **Note**
+> [!NOTE]
 >
 > Currently this project has only been tested on Linux with Python versions 3.11 and 3.12. Modifications to the [SConstruct](SConstruct) file may be needed for other platform configurations. Please submit issues and pull requests for any problems you run into.
 
