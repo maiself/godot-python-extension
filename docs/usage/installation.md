@@ -11,14 +11,19 @@ Other installation locations are also possible, but please keep the original lay
 
 ## From Godot's Asset Library
 
-_To be written..._
+_godot-python is in early development and is not yet available on the Godot Asset Library._
 
 ## From GitHub releases
 
-Visit the project's [releases page](https://github.com/maiself/godot-python-extension/releases) and download the archive for the version of the extension you need. Then extract the archive into the `addons/godot-python-extension` directory within your project.
+_godot-python is in early development and does not yet have an official release._
 
+[//]: # (Visit the project's [releases page]&#40;https://github.com/maiself/godot-python-extension/releases&#41; and download the archive for the version of the extension you need. Then extract the archive into the `addons/godot-python-extension` directory within your project.)
 
-## As a submodule
+## From nightly builds (GitHub Actions)
+
+You can download nightly builds from [GitHub Actions](https://github.com/maiself/godot-python-extension/actions). Keep in mind nightly builds may be unstable and are not recommended for production setups. Right now, they are also not packaged like regular release builds, and may not be usable out of the box.
+
+## As a git submodule
 
 To install a prebuilt version of the extension from the [`prebuilt-releases`](https://github.com/maiself/godot-python-extension/tree/prebuilt-releases) branch as a submodule in `addons/godot-python-extension`:
 
@@ -39,7 +44,7 @@ To update the extension to a newer version run the submodule update command agai
 It is possible to create a submodule using a shallow checkout of [`prebuilt-releases`](https://github.com/maiself/godot-python-extension/tree/prebuilt-releases) that contains only binaries from the version actually needed, rather than all versions in the branch history.
 
 ```{caution}
-This method is more advanced than the others, and may not provide much benefit over a simple submodule as described in the [previous section](#as-a-submodule). A thorough understanding of Git's workings is strongly recommended if considering this method.
+This method is more advanced than the others, and may not provide much benefit over a simple submodule as described in the [previous section](#as-a-git-submodule). A thorough understanding of Git's workings is strongly recommended if considering this method.
 ```
 
 To initialize a shallow checkout of the [`prebuilt-releases`](https://github.com/maiself/godot-python-extension/tree/prebuilt-releases) branch as a submodule in `addons/godot-python-extension`:
