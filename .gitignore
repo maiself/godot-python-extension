@@ -8,6 +8,6 @@
 gdextension_interface.h
 extension_api.json
 
+# Build tools
 /docs/*build/
-
-
+compile_commands.json

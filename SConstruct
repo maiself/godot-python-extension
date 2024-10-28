@@ -121,6 +121,23 @@ opts.Add(
 )
 
 
+opts.Add(
+	BoolVariable(
+		key="compiledb",
+		help="Generate compilation DB (`compile_commands.json`) for external tools",
+		default=env.get("compiledb", False),
+	)
+)
+
+opts.Add(
+	PathVariable(
+		key="compiledb_file",
+		help="Path to a custom `compile_commands.json` file",
+		default=env.get("compiledb_file", "compile_commands.json"),
+		validator=build_utils.validate_parent_dir,
+	)
+)
+
 # for now there's no distinction between build targets, so always use template_release
 env['target'] = 'template_release'
 
@@ -266,6 +283,9 @@ env.Alias("archive_importer_r_string", [
 		],
 	)
 ])
+
+env.Tool("compilation_db")
+env.Alias("compiledb", env.CompilationDatabase(build_utils.normalize_path(env["compiledb_file"], env)))
 
 if not env.get('skip_module_embed', False):
 	# pkg_files = Install('src', files)
