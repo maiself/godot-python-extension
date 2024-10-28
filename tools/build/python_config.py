@@ -111,7 +111,7 @@ def get_python_config_vars(env) -> types.SimpleNamespace:
 
 	config_vars.link_libs = _stable_unique([
 			*itertools.chain(*(
-				(v.removeprefix('-l') for v in value.split())
+				(v.removeprefix('-l') for v in value.split() if v.startswith('-l'))
 				for name in ('LIBS', 'SYSLIBS')
 				if (value := sysconfig_vars.get(name))
 			)),

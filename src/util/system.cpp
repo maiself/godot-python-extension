@@ -10,6 +10,13 @@
 #ifdef UNIX_ENABLED
 #include <dlfcn.h>
 #include <unistd.h>
+#include <cstdlib>
+#endif
+
+#ifdef MACOS_ENABLED
+#include <cerrno>
+#include <libproc.h>
+#include "util/macos.h"
 #endif
 
 #ifdef WINDOWS_ENABLED
@@ -29,8 +36,10 @@ namespace pygodot {
 void system_quick_exit(int status) {
 #ifdef WINDOWS_ENABLED
 	TerminateProcess(GetCurrentProcess(), status);
-#else
+#elif defined(_GLIBCXX_HAVE_QUICK_EXIT)
 	std::quick_exit(status);
+#else
+	std::_Exit(status);
 #endif
 }
 
@@ -58,11 +67,22 @@ std::filesystem::path get_executable_path() {
 	memset(buffer, 0, sizeof(buffer));
 	ssize_t len = readlink("/proc/self/exe", buffer, sizeof(buffer));
 	return std::filesystem::path(buffer);
-#endif
-#ifdef WINDOWS_ENABLED
+#elif defined(MACOS_ENABLED)
+	char pathbuf[PROC_PIDPATHINFO_MAXSIZE];
+
+	const pid_t pid = getpid();
+	const int ret = proc_pidpath(pid, pathbuf, sizeof(pathbuf));
+	if (ret <= 0) {
+		fprintf(stderr, "PID %d: proc_pidpath ();\n", pid);
+		fprintf(stderr, "    %s\n", strerror(errno));
+	}
+	return std::filesystem::path(pathbuf);
+#elif defined(WINDOWS_ENABLED)
 	WCHAR buffer[4096];
 	GetModuleFileNameW(nullptr, buffer, 4096);
 	return std::filesystem::path(buffer);
+#else
+#error System not supported.
 #endif
 }
 
@@ -87,9 +107,9 @@ std::vector<std::string> get_argv() {
 	}
 
 	fclose(cmdline_file);
-#endif
-
-#ifdef WINDOWS_ENABLED
+#elif defined(MACOS_ENABLED)
+	return macos::get_argv();
+#elif defined(WINDOWS_ENABLED)
 	int num_args;
 	LPWSTR* arg_list = CommandLineToArgvW(GetCommandLineW(), &num_args);
 
@@ -105,6 +125,8 @@ std::vector<std::string> get_argv() {
 			args.emplace_back(arg);
 		}
 	}
+#else
+#error System not supported.
 #endif
 
 	return args;

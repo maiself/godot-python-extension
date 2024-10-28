@@ -5,7 +5,8 @@ entry_symbol = "python_extension_init"
 
 [libraries]
 
-macos = "res://bin/macos/libgodot-python.macos.framework"
+macos.x86_64 = "res://bin/macos-x86_64/libgodot-python.macos.x86_64.dylib"
+macos.arm64 = "res://bin/macos-arm64/libgodot-python.macos.arm64.dylib"
 
 windows.x86_32 = "res://bin/windows-x86_32/libgodot-python.windows.x86_32.dll"
 windows.x86_64 = "res://bin/windows-x86_64/libgodot-python.windows.x86_64.dll"
@@ -16,4 +17,3 @@ linux.rv64 = "res://bin/linux-rv64/libgodot-python.linux.rv64.so"
 
 android.x86_64 = "res://bin/android-x86_64/libgodot-python.android.x86_64.so"
 android.arm64 = "res://bin/android-arm64/libgodot-python.android.arm64.so"
-
