@@ -59,6 +59,32 @@ add_platform_config(
 	executable = 'python.exe',
 )
 
+add_platform_config(
+	platform = 'macos',
+	arch = 'x86_64',
+	source_url = 'https://github.com/indygreg/python-build-standalone/releases/download/'
+		'20231002/cpython-3.12.0+20231002-x86_64-apple-darwin-install_only.tar.gz',
+	so_suffixes = ['.so', '.dylib'],
+	ext_suffixes = ['.so'],
+	so_path = 'lib/libpython3.12.dylib',
+	python_lib_dir = 'lib/python3.12',
+	python_ext_dir = 'lib/python3.12/lib-dynload',
+	executable = 'bin/python3.12',
+)
+
+add_platform_config(
+	platform = 'macos',
+	arch = 'arm64',
+	source_url = 'https://github.com/indygreg/python-build-standalone/releases/download/'
+		'20231002/cpython-3.12.0+20231002-aarch64-apple-darwin-install_only.tar.gz',
+	so_suffixes = ['.so', '.dylib'],
+	ext_suffixes = ['.so'],
+	so_path = 'lib/libpython3.12.dylib',
+	python_lib_dir = 'lib/python3.12',
+	python_ext_dir = 'lib/python3.12/lib-dynload',
+	executable = 'bin/python3.12',
+)
+
 
 def fetch_python_for_platform(platform: str, arch: str, dest_dir: pathlib.Path):
 	config = platform_configs[(platform, arch)]
@@ -80,11 +106,21 @@ def prepare_for_platform(platform: str, arch: str,
 	shutil.unpack_archive(src_dir / pathlib.Path(config.source_url).name, extract_dir = src_dir)
 
 	src = src_dir / 'python'
+	src_lib_path = src / config.so_path
+	lib_filename = pathlib.Path(config.so_path).name
+
+	if platform == 'macos':
+		# Rename the library id (which we depend on) to be in @rpath.
+		# (it defaults to /install/lib/)
+		subprocess.run(['install_name_tool', '-id', f'@rpath/{lib_filename}', src_lib_path], check=True)
 
 	dest_dir.mkdir(parents=True, exist_ok=True)
+	shutil.copy2(src_lib_path, dest_dir)
 
-	shutil.copy2(src / config.so_path, dest_dir)
-	subprocess.run(['strip', '-s', str(dest_dir / pathlib.Path(config.so_path).name)], check=True)
+	if platform == 'macos':
+		subprocess.run(['strip', '-x', dest_dir / lib_filename], check=True)
+	else:
+		subprocess.run(['strip', '-s', dest_dir / lib_filename], check=True)
 
 	if (src / config.python_ext_dir).exists():
 		dest_ext_dir = dest_dir / 'python3.12' / 'lib-dynload'

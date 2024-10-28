@@ -124,9 +124,9 @@ def process_arch(env):
 		# No architecture specified. Default to arm64 if building for Android,
 		# universal if building for macOS or iOS, wasm32 if building for web,
 		# otherwise default to the host architecture.
-		if env["platform"] in ["macos", "ios"]:
-			env["arch"] = "universal"
-		elif env["platform"] == "android":
+		# if env["platform"] in ["macos", "ios"]:
+		# 	env["arch"] = "universal"
+		if env["platform"] == "android":
 			env["arch"] = "arm64"
 		elif env["platform"] == "web":
 			env["arch"] = "wasm32"

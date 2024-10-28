@@ -199,6 +199,11 @@ python_sources = set()
 
 sources.update(pathlib.Path('src').glob('**/*.cpp'))
 
+if env['platform'] == 'macos':
+	# For Objective-C++ files
+	env.Append(CCFLAGS = ['-ObjC++'])
+	sources.update(pathlib.Path('src').glob('**/*.mm'))
+
 for ext in ('py', 'pyc', 'json', 'svg', 'md'):
 	python_sources.update(pathlib.Path('lib').glob(f'**/*.{ext}'))
 
@@ -340,7 +345,6 @@ strip = env.get('strip', False)
 if not env.get('is_msvc'):
 	env.Append(CCFLAGS = ['-fvisibility=hidden', *['-flto'] * with_lto]) # XXX
 	env.Append(LINKFLAGS = ['-fvisibility=hidden', *['-flto'] * with_lto, *['-s'] * strip]) # XXX
-
 else:
 	env.Append(LIBS = ['Shell32.lib', ])
 
@@ -348,6 +352,11 @@ else:
 if env['platform'] == 'windows':
 	# linker has trouble if the table is too large
 	env.Append(CPPDEFINES = ['CLASS_VIRTUAL_CALL_TABLE_SIZE=512'])
+elif env['platform'] == 'macos':
+	# Need to set the rpath for relative loading of libpython to succeed.
+	# This doesn't work for some reason
+	# env.Replace(RPATH=['@loader_path'])
+	env.Append(LINKFLAGS=['-Wl,-rpath,@loader_path'])
 
 
 env.Prepend(CPPPATH=['src', os.fspath(generated_path), 'extern/pybind11/include'])
