@@ -73,7 +73,7 @@ jobs:
 
       - name: Upload artifacts (Linux)
         if: matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: godot-python-${{ matrix.platform }}-${{ matrix.arch }}
           path: godot-python*.zip
@@ -81,7 +81,7 @@ jobs:
 
       - name: Upload artifacts (Windows)
         if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: godot-python-${{ matrix.platform }}-${{ matrix.arch }}
           path: |
@@ -92,7 +92,7 @@ jobs:
 
       - name: Upload artifacts (macOS)
         if: matrix.os == 'macos-latest'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: godot-python-${{ matrix.platform }}-${{ matrix.arch }}
           path: bin/**/*
@@ -107,3 +107,13 @@ jobs:
             echo "Releasing artifact for windows"
           elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
             echo "Releasing artifact for macOS"
+  merge:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Merge Artifacts
+        uses: actions/upload-artifact/merge@v4
+        with:
+          name: godot-python
+          pattern: godot-python-*
+          delete-merged: true
