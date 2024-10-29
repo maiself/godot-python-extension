@@ -16,6 +16,8 @@ from tools.build import build_utils
 
 EnsureSConsVersion(4, 0)
 
+lib_name = "godot-python"
+
 
 try:
 	Import("env")
@@ -322,7 +324,7 @@ def _prepare_python(target, source, env):
 prepare_python_alias = env.Alias("prepare_python", [
 	Builder(action = Action(_prepare_python, "Preparing Python"))(
 		env,
-		target = f'bin/{prepared_python_config.name}/python312.zip', # XXX: version
+		target = f'build/addons/{lib_name}/{prepared_python_config.name}/python312.zip', # XXX: version
 		source = [
 			fetch_python_alias[0].children(),
 			prepare_python.__file__,
@@ -366,8 +368,10 @@ env.Append(CPPDEFINES = [f'PYGODOT_ARCH=\\"{env["arch"]}\\"'])
 
 
 def _append_python_config(env, target, **kwargs):
-	src_dir = generated_path / 'python' / prepared_python_config.name
-	env['python'] = os.fspath(prepare_python.get_python_for_platform(env['platform'], env['arch'], src_dir))
+	python_dir = generated_path / 'python' / prepared_python_config.name / 'python'
+	env['python'] = os.fspath(prepare_python.get_python_for_platform(
+		env['platform'], env['arch'], python_dir=python_dir
+	))
 
 	from tools.build import python_config
 	_config_vars = python_config.get_python_config_vars(env)
@@ -407,10 +411,10 @@ env["suffix"] = suffix
 
 env["OBJSUFFIX"] = suffix + env["OBJSUFFIX"]
 
-library_name = "libgodot-python{}{}".format(env["suffix"], env["SHLIBSUFFIX"])
+binary_name = f"{env.subst('$SHLIBPREFIX')}{lib_name}.{env['platform']}.{env['arch']}{env.subst('$SHLIBSUFFIX')}"
 
 library = env.SharedLibrary(
-	target = f"bin/{env['platform']}-{env['arch']}/{library_name}",
+	target = f"build/addons/{lib_name}/{env['platform']}-{env['arch']}/{binary_name}",
 	source = sources,
 )
 

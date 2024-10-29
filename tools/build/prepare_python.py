@@ -133,13 +133,9 @@ def prepare_for_platform(platform: str, arch: str,
 	shutil.make_archive(dest_dir / 'python312', 'zip', root_dir=src / config.python_lib_dir, base_dir='')
 
 
-def get_python_for_platform(platform: str, arch: str, src_dir: pathlib.Path) -> pathlib.Path:
+def get_python_for_platform(platform: str, arch: str, python_dir: pathlib.Path) -> pathlib.Path:
 	config = platform_configs[(platform, arch)]
-
-	src = src_dir / 'python'
-
-	return src / config.executable
-
+	return python_dir / config.executable
 
 
 def main():
