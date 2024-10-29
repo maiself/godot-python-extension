@@ -64,19 +64,12 @@ jobs:
         run: |
           scons platform=${{ matrix.platform }} arch=${{ matrix.arch }} single_source=true
 
-      - name: Create archive (Linux)
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          cd bin/
-          zip -q -r ../godot-python-${{ matrix.platform }}-${{ matrix.arch }}.zip *
-          cd ../
-
       - name: Upload artifacts (Linux)
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
         with:
           name: godot-python-${{ matrix.platform }}-${{ matrix.arch }}
-          path: godot-python*.zip
+          path: bin/**/*
           retention-days: 30
 
       - name: Upload artifacts (Windows)
