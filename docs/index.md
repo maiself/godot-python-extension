@@ -58,6 +58,7 @@ This project released under the MIT license, see the [license.md](https://github
 :maxdepth: 3
 
 usage/installation
+usage/platforms
 usage/type-conversions
 reference/index
 ```
