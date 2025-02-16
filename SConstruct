@@ -86,13 +86,15 @@ opts.Add(
 # godot python options
 
 opts.Add(
-	PathVariable(
-		key="python",
-		help="Path to the `python` to build against.",
-		default='python3',
-		validator=(lambda key, val, env: build_utils.validate_executable(key, val, env)
-			if not env.get('python_lib_dir') else None),
-	)
+	key="python_version",
+	help="Version of python to use. Must be available in the python_standalone_build.",
+	default='3.12.0',
+)
+
+opts.Add(
+	key="python_standalone_build",
+	help="Build ID to use for the python version. You can find the list of builds at https://github.com/indygreg/python-build-standalone/releases.",
+	default="20231002",
 )
 
 opts.Add(
@@ -311,44 +313,52 @@ env.Alias("godot_module_archive", [
 
 from tools.build import prepare_python
 
-prepared_python_config = prepare_python.platform_configs[(env['platform'], env['arch'])]
+prepared_python_config = prepare_python.configure(
+	platform=env['platform'],
+	arch=env['arch'],
+	python_version=env['python_version'],
+	build=env['python_standalone_build'],
+)
 
 
 def _fetch_python(target, source, env):
-	dest = pathlib.Path(target[0].path).parent
-	dest.mkdir(parents=True, exist_ok=True)
-	prepare_python.fetch_python_for_platform(env['platform'], env['arch'], dest)
+	try:
+		prepare_python.fetch_python_for_config(prepared_python_config, target[0])
+	except Exception as exc:
+		print(f"Error while fetching python: {exc}")
+		return 1
 
-fetch_python_alias = env.Alias("fetch_python", [
-	Builder(action = env.Action(_fetch_python, "Fetching Python"))(
-		env,
-		target = os.fspath(generated_path / 'python'
-			/ prepared_python_config.name / pathlib.Path(prepared_python_config.source_url).name),
-		source = [
-		],
-	)
-])
+fetched_python_files = env.Command(
+	target = os.fspath(
+		generated_path / 'python' / prepared_python_config.name / pathlib.Path(prepared_python_config.source_url).name
+	),
+	source = [
+	],
+	action=_fetch_python
+)
 
 
 def _prepare_python(target, source, env):
-	dest = pathlib.Path(target[0].path).parent.resolve()
-	dest.mkdir(parents=True, exist_ok=True)
+	try:
+		dest = pathlib.Path(target[0].path).parent.resolve()
+		dest.mkdir(parents=True, exist_ok=True)
 
-	src = pathlib.Path(source[0].path).parent.resolve()
+		src = pathlib.Path(source[0].path).parent.resolve()
 
-	env['python'] = prepare_python.prepare_for_platform(env['platform'], env['arch'],
-		src_dir = src, dest_dir = dest)
+		env['python'] = prepare_python.prepare_for_platform(prepared_python_config,
+			src_dir = src, dest_dir = dest)
+	except Exception as exc:
+		print(f"Error while preparing python: {exc}")
+		return 1
 
-prepare_python_alias = env.Alias("prepare_python", [
-	Builder(action = Action(_prepare_python, "Preparing Python"))(
-		env,
-		target = f'bin/{prepared_python_config.name}/python312.zip', # XXX: version
-		source = [
-			fetch_python_alias[0].children(),
-			prepare_python.__file__,
-		],
-	)
-])
+prepared_python_files = env.Command(
+	target = f'bin/{prepared_python_config.name}/python{prepared_python_config.python_version_minor}-lib.zip',
+	source = [
+		*fetched_python_files,
+		prepare_python.__file__,
+	],
+	action=_prepare_python
+)
 
 
 
@@ -386,31 +396,36 @@ env.Append(CPPDEFINES = [f'PYGODOT_ARCH=\\"{env["arch"]}\\"'])
 
 
 def _append_python_config(env, target, **kwargs):
-	src_dir = generated_path / 'python' / prepared_python_config.name
-	env['python'] = os.fspath(prepare_python.get_python_for_platform(env['platform'], env['arch'], src_dir))
+	try:
+		src_dir = generated_path / 'python' / prepared_python_config.name
+		env['python'] = os.fspath(prepare_python.get_python_for_platform(prepared_python_config, src_dir))
 
-	from tools.build import python_config
-	_config_vars = python_config.get_python_config_vars(env)
+		from tools.build import python_config
+		_config_vars = python_config.get_python_config_vars(env)
 
-	env.Append(LIBPATH = _config_vars.lib_paths)
-	env.Append(LINKFLAGS = _config_vars.link_flags)
-	env.Append(LIBS = _config_vars.link_libs)
-	env.Append(CPPPATH = _config_vars.include_flags)
+		env.Append(LIBPATH = _config_vars.lib_paths)
+		env.Append(LINKFLAGS = _config_vars.link_flags)
+		env.Append(LIBS = _config_vars.link_libs)
+		env.Append(CPPPATH = _config_vars.include_flags)
 
-	if env['platform'] != 'windows':
-		env.Append(CPPDEFINES = [f'PYTHON_LIBRARY_PATH=\\"{_config_vars.ldlibrary or ""}\\"'])
+		if env['platform'] != 'windows':
+			env.Append(CPPDEFINES = [f'PYTHON_LIBRARY_PATH=\\"{_config_vars.ldlibrary or ""}\\"'])
 
-	dest = pathlib.Path(target[0].path)
-	dest.write_text(repr(_config_vars))
+		dest = pathlib.Path(target[0].path)
+		dest.write_text(repr(_config_vars))
+	except Exception as exc:
+		print(f"Error while appending python config: {exc}")
+		return 1
 
 
-append_python_config = Builder(action = Action(_append_python_config, None))(
-	env, target='src/.generated/.append_python_config', source=None)
+append_python_config_files = env.Command(
+	source=prepared_python_files,
+	target='src/.generated/.append_python_config',
+	action=_append_python_config
+)
 
-env.Depends(append_python_config, prepare_python_alias)
-env.AlwaysBuild(append_python_config)
-
-env.Depends(sources, append_python_config)
+env.AlwaysBuild(append_python_config_files)
+env.Depends(sources, append_python_config_files)
 
 
 # library name
@@ -430,7 +445,7 @@ env["OBJSUFFIX"] = suffix + env["OBJSUFFIX"]
 library_name = "libgodot-python{}{}".format(env["suffix"], env["SHLIBSUFFIX"])
 
 library = env.SharedLibrary(
-	target = f"bin/{env['platform']}-{env['arch']}/{library_name}",
+	target = f"bin/{prepared_python_config.name}/{library_name}",
 	source = sources,
 )
 
