@@ -93,11 +93,11 @@ static struct runtime_config_t {
 
 		// `python_home_path`
 		if(likely_running_from_editor) {
-			python_home_path = lib_dir_path;
+			python_home_path = lib_dir_path / "python";
 		}
 		else {
 			auto platform_arch = std::string(PYGODOT_PLATFORM) + "-" + std::string(PYGODOT_ARCH);
-			python_home_path = lib_dir_path / "lib" / platform_arch;
+			python_home_path = lib_dir_path / "lib" / platform_arch / "python";
 		}
 	}
 } runtime_config;
@@ -171,12 +171,13 @@ static bool init_python_isolated() {
 	auto py_version = py_major + "." + py_minor;
 	auto py_version_no_dot = py_major + py_minor;
 	auto python_zip_name = "python" + py_version_no_dot + ".zip";
+    auto python_lib_path = runtime_config.python_home_path / "lib";
 	auto python_lib_name = "python" + py_version;
 
 	add_module_search_path((runtime_config.python_home_path / python_zip_name).string());
-	add_module_search_path((runtime_config.python_home_path / python_lib_name).string());
-	add_module_search_path((runtime_config.python_home_path / python_lib_name / "lib-dynload").string());
-	add_module_search_path((runtime_config.python_home_path / python_lib_name / "site-packages").string());
+	add_module_search_path((python_lib_path / python_lib_name).string());
+	add_module_search_path((python_lib_path / python_lib_name / "lib-dynload").string());
+	add_module_search_path((python_lib_path / python_lib_name / "site-packages").string());
 
 	config.module_search_paths_set = 1;
 
