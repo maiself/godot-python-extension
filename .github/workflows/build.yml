@@ -64,12 +64,21 @@ jobs:
         run: |
           scons platform=${{ matrix.platform }} arch=${{ matrix.arch }} single_source=true
 
-      - name: Upload artifacts (Linux)
-        if: matrix.os == 'ubuntu-latest'
+      # Creating an archive explicitly preserves permissions in the artifact,
+      #  which upload-artifact doesn't. See https://github.com/actions/upload-artifact/issues/38
+      - name: Create archive (Linux, macOS)
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
+        run: |
+          cd bin/
+          zip -q -r ../godot-python-${{ matrix.platform }}-${{ matrix.arch }}.zip *
+          cd ../
+
+      - name: Upload artifacts (Linux, macOS)
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
         uses: actions/upload-artifact@v4
         with:
           name: godot-python-${{ matrix.platform }}-${{ matrix.arch }}
-          path: bin/**/*
+          path: godot-python-${{ matrix.platform }}-${{ matrix.arch }}.zip
           retention-days: 30
 
       - name: Upload artifacts (Windows)
@@ -81,14 +90,6 @@ jobs:
             bin/**/*
             !bin/**/*.lib
             !bin/**/*.exp
-          retention-days: 30
-
-      - name: Upload artifacts (macOS)
-        if: matrix.os == 'macos-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: godot-python-${{ matrix.platform }}-${{ matrix.arch }}
-          path: bin/**/*
           retention-days: 30
 
       - name: Release artifact
