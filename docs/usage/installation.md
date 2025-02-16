@@ -21,7 +21,7 @@ _godot-python is in early development and does not yet have an official release.
 
 ## From nightly builds (GitHub Actions)
 
-You can download nightly builds from [GitHub Actions](https://github.com/maiself/godot-python-extension/actions). Keep in mind nightly builds may be unstable and are not recommended for production setups. Right now, they are also not packaged like regular release builds, and may not be usable out of the box.
+You can download nightly builds from [GitHub Actions](https://github.com/maiself/godot-python-extension/actions). Keep in mind nightly builds may be unstable and are not recommended for production setups.
 
 ## As a git submodule
 
