@@ -162,7 +162,7 @@ def bind_method(cls, type_info, method_info, with_docs=True):
 
 	method = None
 
-	if 'hash' in method_info:
+	if 'hash' in method_info and not method_info.get('is_virtual'):
 		if is_utility:
 			method = get_method(
 				class_method_info,
@@ -221,7 +221,7 @@ def bind_method(cls, type_info, method_info, with_docs=True):
 
 		decorators = []
 
-		if 'hash' not in method_info: # XXX
+		if 'hash' not in method_info or method_info.get('is_virtual'): # XXX
 			decorators.append('@method_not_implemented')
 
 		if method_info.get('is_static'):
