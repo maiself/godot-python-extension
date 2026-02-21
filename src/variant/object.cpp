@@ -222,6 +222,15 @@ bool Object::_reference(bool reference) {
 	py::gil_scoped_acquire gil;
 
 	if(reference) {
+		if(_deferred_release) {
+			DEBUG_REFCOUNT_FUNC(this, "call_deferred", ("..."), ("cancelled"))
+
+			assert(Py_REFCNT(_handle.ptr()) == 1 && get_reference_count() == 2);
+
+			_deferred_release->cancel();
+			_deferred_release = nullptr;
+		}
+
 		_handle.inc_ref();
 	}
 	else {
@@ -229,21 +238,25 @@ bool Object::_reference(bool reference) {
 		if(Py_REFCNT(_handle.ptr()) == 2 && get_reference_count() == 1) {
 			DEBUG_REFCOUNT_FUNC(this, "call_deferred", ("..."), ("scheduled"))
 
-			_deferred_release = &call_deferred([this]() mutable {
-				DEBUG_REFCOUNT_FUNC(this, "call_deferred", ("..."), ("called"))
+			assert(!_deferred_release);
 
-				py::gil_scoped_acquire gil;
+			if(!_deferred_release) {
+				_deferred_release = &call_deferred([this]() mutable {
+					DEBUG_REFCOUNT_FUNC(this, "call_deferred", ("..."), ("called"))
 
-				_deferred_release = nullptr;
+					py::gil_scoped_acquire gil;
 
-				if(_ptr && Py_REFCNT(_handle.ptr()) == 1 && get_reference_count() == 1) {
-					py::object obj = py::reinterpret_borrow<py::object>(_handle);
+					_deferred_release = nullptr;
 
-					if(unreference()) {
-						_destroy();
+					if(_ptr && Py_REFCNT(_handle.ptr()) == 1 && get_reference_count() == 1) {
+						py::object obj = py::reinterpret_borrow<py::object>(_handle);
+
+						if(unreference()) {
+							_destroy();
+						}
 					}
-				}
-			});
+				});
+			}
 		}
 
 		_handle.dec_ref();
@@ -254,8 +267,6 @@ bool Object::_reference(bool reference) {
 
 
 int Object::_traverse(PyObject* self_base, visitproc visit, void* arg) {
-	DEBUG_REFCOUNT_FUNC(this, "Object::_traverse", (self_base, visit, arg), ())
-
 	if(!is_reference_counted()) {
 		return 0;
 	}
@@ -263,6 +274,8 @@ int Object::_traverse(PyObject* self_base, visitproc visit, void* arg) {
 	if(!_ptr) {
 		return 0;
 	}
+
+	DEBUG_REFCOUNT_FUNC(this, "Object::_traverse", (self_base, visit, arg), ())
 
 	if(get_reference_count() == 1) {
 		Py_VISIT(self_base);
