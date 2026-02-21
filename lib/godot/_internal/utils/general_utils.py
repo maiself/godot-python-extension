@@ -571,6 +571,56 @@ class ColoredTracebackException(traceback.TracebackException):
 
 
 
+@functools.lru_cache(1024)
+def debug_colorize_string(value: str, *, padding: str = '') -> str:
+	value_hash = 0
+	counter = 0
+
+	# there are better hashing methods but...
+	def shift(mod):
+		nonlocal value_hash
+		nonlocal counter
+
+		if value_hash < mod:
+			value_hash = abs(hash(f'{value};{counter}'))
+			counter += 1
+
+		value_hash, res = divmod(value_hash, mod)
+		return res
+
+	fg = (0x80, 0x60)
+	bg = (0x28, 0x10)
+
+	# not the best approch to choosing the colors but quick to put together
+	# could replace with something better later
+
+	# search for min and max components a difference of at least 30% of range
+	for _i in range(32):
+		a_fg = [shift(fg[0]) + fg[1] for i in range(3)]
+		if max(a_fg) - min(a_fg) > fg[0] * 0.3:
+			break
+
+	# search for min and max components a difference of at least 30% of range
+	for _i in range(32):
+		a_bg = [shift(bg[0]) + bg[1] for i in range(3)]
+		if (
+			max(a_bg) - min(a_bg) > bg[0] * 0.3
+
+			# search for bg and fg with different max compoents
+			and sorted(zip(a_bg, range(3)))[-1][1] != sorted(zip(a_fg, range(3)))[-1][1]
+		):
+			break
+
+	args = ';'.join(str(x) for x in [
+		38, 2,
+		*a_fg,
+		48, 2,
+		*a_bg,
+	])
+
+	return f"\033[{args}m{padding}{value}{padding}\033[39;49m"
+
+
 
 
 class IntConstant(int):

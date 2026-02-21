@@ -415,8 +415,11 @@ env.Depends(sources, append_python_config)
 
 # library name
 suffix = ".{}".format(env["platform"])
-if env.dev_build:
-	suffix += ".dev"
+
+# XXX: easy to not notice when not loaded?
+#if env.dev_build:
+#	suffix += ".dev"
+
 if env["precision"] == "double":
 	suffix += ".double"
 suffix += "." + env["arch"]

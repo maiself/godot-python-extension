@@ -16,7 +16,9 @@
 // TODO: some sort of debug / logging / tests
 
 
-//#define REFCOUNT_DEBUG
+#ifdef DEV_ENABLED
+#define REFCOUNT_DEBUG
+#endif
 
 
 namespace godot {
@@ -70,6 +72,18 @@ public:
 		std::make_tuple call_args, std::make_tuple notes);
 
 namespace pygodot::object::refcount_debug {
+
+	std::string debug_colorize_string(const std::string& value) {
+		using namespace pybind11::literals;
+
+		static py::handle debug_colorize_string = resolve_name("godot._internal.utils.debug_colorize_string");
+
+		return std::format(
+			"\033[22m{}\033[38;5;243;48;5;232m",
+			debug_colorize_string(value, "padding"_a = " ").cast<std::string>()
+		);
+	}
+
 	class scoped_refcount_debug {
 		static inline int call_level = 0;
 
@@ -77,27 +91,63 @@ namespace pygodot::object::refcount_debug {
 		static void write_list(Sep&& sep) {
 		}
 
+		static std::string get_arg(const std::string& arg) {
+			return debug_colorize_string(arg);
+		}
+
+		static std::string get_arg(py::str arg) {
+			return debug_colorize_string(arg.cast<std::string>());
+		}
+
+		static std::string get_arg(const char* arg) {
+			return arg;
+		}
+
+		template<typename Arg>
+		static auto&& get_arg(Arg&& arg) {
+			return std::forward<Arg>(arg);
+		}
+
+		template<typename Arg>
+		static std::string get_arg(Arg* arg) {
+			return debug_colorize_string(std::format("{}", reinterpret_cast<void*>(arg)));
+		}
+
 		template<typename Sep, typename Arg, typename... Args>
 		static void write_list(Sep&& sep, Arg&& arg, Args&&... args) {
-			std::cout << std::forward<Arg>(arg);
-			((std::cout << std::forward<Sep>(sep) << std::forward<Args>(args)), ...);
+			std::cout << get_arg(std::forward<Arg>(arg));
+			((std::cout << std::forward<Sep>(sep) << get_arg(std::forward<Args>(args))), ...);
 		}
 	public:
 		template<typename... CallArgs, typename... Notes>
 		scoped_refcount_debug(godot::Object* obj, const std::string& name,
 			std::tuple<CallArgs...> call_args, std::tuple<Notes...> notes)
 		{
+			py::gil_scoped_acquire gil;
+
 			for(int i = 0; i < call_level; i++) {
 				std::cout << "  ";
 			}
 			call_level++;
 
-			std::cout << name << "(";
+			std::cout << "\033[38;5;243;48;5;232m ";
+
+			std::cout << "\033[1m" << name << "\033[22m( ";
 			std::apply(write_list<const char*, CallArgs...>, std::tuple_cat(std::make_tuple(", "), call_args));
-			std::cout << ")";
+			std::cout << " )";
 
 			if(obj) {
-				std::cout << " ; obj = " << obj;
+				std::string type_name = "<unknown type>";
+
+				if(_ObjectAccessor(*obj).handle()) {
+					py::handle type_ = py::type::handle_of(_ObjectAccessor(*obj).handle());
+
+					if(type_ && py::hasattr(type_, "__name__")) {
+						type_name = py::getattr(type_, "__name__").cast<py::str>();
+					}
+				}
+
+				std::cout << " ; obj = " << get_arg(obj) << " ( " << debug_colorize_string(type_name) << " )";
 			}
 
 			if(sizeof...(Notes)) {
@@ -106,14 +156,14 @@ namespace pygodot::object::refcount_debug {
 			std::apply(write_list<const char*, Notes...>, std::tuple_cat(std::make_tuple(" ; "), notes));
 
 			if(obj && _ObjectAccessor(*obj).handle().ptr()) {
-				std::cout << " ; py refs = " << Py_REFCNT(_ObjectAccessor(*obj).handle().ptr());
+				std::cout << " ; py refs = \033[1;33m" << Py_REFCNT(_ObjectAccessor(*obj).handle().ptr()) << "\033[22;38;5;243m";
 			}
 
 			if(obj && obj->is_reference_counted()) {
-				std::cout << " ; gd refs = " << obj->get_reference_count();
+				std::cout << " ; gd refs = \033[1;36m" << obj->get_reference_count() << "\033[22;38;5;243m";
 			}
 
-			std::cout << "\n";
+			std::cout << " \033[22;0m\n";
 		}
 
 		~scoped_refcount_debug() {
