@@ -490,11 +490,11 @@ bool Object::unreference() {
 
 
 py::object Object::get_bound_instance(GDExtensionObjectPtr obj) {
-	DEBUG_REFCOUNT_FUNC(nullptr, "Object::get_bound_instance", (obj), ())
-
 	if(!obj) {
 		return py::none();
 	}
+
+	DEBUG_REFCOUNT_FUNC(nullptr, "Object::get_bound_instance", (obj), ())
 
 	if(!Py_IsInitialized()) {
 		throw std::runtime_error("cannot bind instance after interpreter finalization");
