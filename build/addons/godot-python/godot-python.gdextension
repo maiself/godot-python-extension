@@ -1,0 +1,19 @@
+[configuration]
+
+compatibility_minimum = 4.2
+entry_symbol = "python_extension_init"
+
+[libraries]
+
+macos.x86_64 = "macos-x86_64/libgodot-python.macos.x86_64.dylib"
+macos.arm64 = "macos-arm64/libgodot-python.macos.arm64.dylib"
+
+windows.x86_32 = "windows-x86_32/godot-python.windows.x86_32.dll"
+windows.x86_64 = "windows-x86_64/godot-python.windows.x86_64.dll"
+
+linux.x86_64 = "linux-x86_64/libgodot-python.linux.x86_64.so"
+linux.arm64 = "linux-arm64/libgodot-python.linux.arm64.so"
+linux.rv64 = "linux-rv64/libgodot-python.linux.rv64.so"
+
+android.x86_64 = "android-x86_64/libgodot-python.android.x86_64.so"
+android.arm64 = "android-arm64/libgodot-python.android.arm64.so"

@@ -3,7 +3,10 @@
 
 *.so
 
-/bin/
+/build/addons/godot-python/**/*
+!/build/addons/godot-python/*
+!/build/addons/godot-python/**/
+!/build/addons/godot-python/**/*.plist
 
 gdextension_interface.h
 extension_api.json
