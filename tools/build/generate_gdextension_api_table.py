@@ -5,6 +5,8 @@ import pathlib
 import types
 import dataclasses
 import re
+import argparse
+import itertools
 
 
 tools_dir = pathlib.Path(__file__).parent.parent.resolve()
@@ -85,6 +87,13 @@ class VariantTypeInfo:
 	size: int
 	enum_value_name: str | None
 
+	composite_depth = 0
+
+	low_type: str = 'void'
+	ndim: int = 0
+	shape: list = dataclasses.field(default_factory = list)
+	strides: list = dataclasses.field(default_factory = list)
+
 	@property
 	def gde_type_name(self) -> str:
 		return dict(
@@ -103,29 +112,40 @@ def get_variant_enum_value_name(variant_type_name):
 
 
 def main():
+	parser = argparse.ArgumentParser()
+	parser.add_argument('--print', action='store_true')
+
+	args = parser.parse_args()
+
 	header_path.parent.mkdir(exist_ok=True)
 
 	header_mtime = header_path.stat().st_mtime if header_path.exists() else 0
 	self_mtime = pathlib.Path(__file__).stat().st_mtime
 	interface_mtime = gdextension_interface_path.stat().st_mtime
 
-	if header_mtime >= max(self_mtime, interface_mtime):
+	update = header_mtime < max(self_mtime, interface_mtime)
+
+	if not update and not args.print:
 		return
 
-	print(f'generating {header_path.relative_to(project_dir)}')
+	if update:
+		print(f'generating {header_path.relative_to(project_dir)}')
 
-	#import_path_as(api_info_path, 'api_info')
+	import_path_as(api_info_path, 'api_info')
 
-	#api = api_info.api
+	api = api_info.api
 
-	#build_config_info = api.builtin_class_sizes.get(
-	#	build_configuration, key='build_configuration', default=api_info.raise_not_found)
+	build_config_info = api.builtin_class_sizes.get(
+		build_configuration, key='build_configuration', default=api_info.raise_not_found)
+
+	build_config_info_member_offsets = api.builtin_class_member_offsets.get(
+		build_configuration, key='build_configuration', default=api_info.raise_not_found)
 
 	variant_types_info = {}
 
-	#for size_info in build_config_info.sizes:
-	for name, size in _variant_sizes.items():
-		#print(size_info)
+	for name, size in [size_info.values() for size_info in build_config_info.sizes]:
+	#for name, size in _variant_sizes.items():
+		#print(name, size)
 		if name == 'Variant':
 			variant_types_info['Nil'].size = size
 			continue
@@ -133,6 +153,137 @@ def main():
 		variant_type_info = VariantTypeInfo(name = name, size = size,
 			enum_value_name = get_variant_enum_value_name(name))
 		variant_types_info[name] = variant_type_info
+
+
+	def _resolve_depth(name):
+		try:
+			members = getattr(build_config_info_member_offsets.classes, name, None).members
+		except ValueError:
+			return 0
+
+		return 1 + max(_resolve_depth(member.meta) for member in members)
+
+	for name, members in [info.values() for info in build_config_info_member_offsets.classes]:
+		variant_types_info[name].composite_depth = _resolve_depth(name)
+
+		#print(f'{name} : {variant_types_info[name].composite_depth = }')
+
+
+	def _resolve_member_type(name, depth = 0):
+		if name not in variant_types_info or variant_types_info[name].composite_depth <= depth:
+			return [name]
+
+		try:
+			members = getattr(build_config_info_member_offsets.classes, name, None).members
+		except ValueError:
+			return [name]
+
+		return [*itertools.chain(*(_resolve_member_type(member.meta, depth) for member in members))]
+
+
+	def get_size_as_member(name):
+		match name.lower():
+			case 'float':
+				return 4
+			case 'double':
+				return 8
+			case 'byte':
+				return 1
+
+		if '32' in name:
+			return 4
+		if '64' in name:
+			return 8
+
+		if '8' in name:
+			return 1
+
+		return variant_types_info[name].size
+
+	def fix_member_type(name):
+		match name.lower():
+			case 'float' | 'float32':
+				return 'float'
+			case 'float64':
+				return 'double'
+			case 'int32':
+				return 'int32_t'
+			case 'int64':
+				return 'int64_t'
+			case 'byte':
+				return 'uint8_t'
+		return name
+
+
+	for name, members in [info.values() for info in build_config_info_member_offsets.classes]:
+	#for name, size in _variant_sizes.items():
+		#print(name, ':', ', '.join([m.meta for m in members]))
+
+		max_depth_limit = 4
+
+		types_low = _resolve_member_type(name)
+		types_high = _resolve_member_type(name, 1 if variant_types_info[name].composite_depth > 1 else 0)
+
+		if any(type_ != types_low[0] for type_ in types_low):
+			raise RuntimeError(f'non homogeneous variant type: {name}')
+
+		if (types_high == types_low) or any(type_ != types_high[0] for type_ in types_high):
+			types_high = []
+
+		#print(types_low)
+		#print(types_high)
+
+		type_ = types_low[0]
+		count = len(types_low)
+
+		if variant_types_info[name].size != get_size_as_member(type_) * count:
+			raise RuntimeError(f'composite variant member size mismatch: {name}'
+				f'\n\t({variant_types_info[name].size = })'
+				f' != (get_size_as_member({type_!r}) * {count} = {get_size_as_member(type_) * count})')
+
+		if types_high:
+			if len(types_low) % len(types_high) != 0:
+				raise RuntimeError()
+			shape = [len(types_high), len(types_low) // len(types_high)]
+			strides = [get_size_as_member(types_high[0]), get_size_as_member(type_)]
+		else:
+			shape = [len(types_low)]
+			strides = [get_size_as_member(type_)]
+
+		variant_types_info[name].low_type = fix_member_type(type_)
+		variant_types_info[name].ndim = len(shape)
+		variant_types_info[name].shape = shape
+		variant_types_info[name].strides = strides
+
+		#print(f'{name} : {type_}[{len(types_low)}]  {shape = }  {strides = }')
+
+		#print()
+
+
+
+	for variant_type_info in variant_types_info.values():
+		if not (match_ := re.fullmatch(r'Packed(.+)Array', variant_type_info.name)) or 'String' in match_[1]:
+			continue
+
+		name = fix_member_type(match_[1])
+
+		if name in variant_types_info and variant_types_info[name].shape:
+			for attr in ['low_type', 'ndim', 'shape', 'strides']:
+				setattr(variant_type_info, attr, getattr(variant_types_info[name], attr))
+
+			variant_type_info.ndim += 1
+			variant_type_info.shape = [0] + variant_type_info.shape
+			variant_type_info.strides = [get_size_as_member(name)] + variant_type_info.strides
+
+		else:
+
+			variant_type_info.low_type = name
+			variant_type_info.ndim = 1
+			variant_type_info.shape = [0]
+			variant_type_info.strides = [get_size_as_member(name)]
+
+	#for variant_type_info in variant_types_info.values():
+	#	print(variant_type_info)
 
 	data = gdextension_interface_path.read_text()
 
@@ -161,14 +312,31 @@ def main():
 	for type_ in variant_types_info.values():
 		s.append(f'\tGDEXTENSION_VARIANT_TYPE({type_.gde_type_name}, {type_.size}, {type_.enum_value_name or ""}) \\')
 
+	s.append('')
+	s.append('// GDEXTENSION_BUFFER_TYPE(type_name, type_size, base_type, ndim, shape, strides)')
+	s.append('')
+	s.append('#define _GDE_NO_PAREN(...) __VA_ARGS__ // remove parentheses')
+	s.append('')
+	s.append('#define GDEXTENSION_BUFFER_TYPES \\')
+
+	for type_ in variant_types_info.values():
+		if not type_.ndim:
+			continue
+
+		s.append(f'\tGDEXTENSION_BUFFER_TYPE({type_.gde_type_name}, {type_.size}, {type_.low_type or ""}, {type_.ndim}, _GDE_NO_PAREN({', '.join(str(x) for x in type_.shape)}), _GDE_NO_PAREN({', '.join(str(x) for x in type_.strides)})) \\')
+
 
 	s.append('')
 	s.append('')
 
 	text = '\n'.join(s)
 
-	#if not header_path.exists() or header_path.read_text() != text:
-	header_path.write_text(text)
+	if update:
+		#if not header_path.exists() or header_path.read_text() != text:
+		header_path.write_text(text)
+
+	if args.print:
+		print(text)
 
 
 if __name__ == '__main__':

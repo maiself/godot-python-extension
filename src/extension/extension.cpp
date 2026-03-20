@@ -340,7 +340,24 @@ extern "C" PYBIND11_EXPORT GDExtensionBool python_extension_init(
 
 	// TODO: work this into the build system
 
-	// grep -r -h -o --color=no -E '\bextension_interface::\w+' ./src/ | sort | uniq | sed -E 's/\w+::(\w+)/\t\t"\1",/g'
+	// grep -r -h -o --color=no -P '\bextension_interface::\w+(?!=#)' ./src/ | sort | uniq | sed -E 's/\w+::(\w+)/\t\t"\1",/g'
+
+	// skip (struct extension_interface + macro var): godot_version, library, token, variant_type_variant_max, name
+	// grep -h -o --color=no -P '(?:\bstatic inline \w+\*? )\w+\b' ./src/extension/extension.h | sort | uniq | sed -E 's/.* (\w+)$/\t\t"\1",/g'
+
+	// full command
+	/*
+		comm -3 \
+			<(( \
+				grep -r -h -o --color=no -P '\bextension_interface::\w+(?!#)\b' ./src/ \
+					| sed -E 's/\w+::(\w+)/\1/g' ; \
+				grep -h -o --color=no -P 'packed_\w+_array_operator_index(_const)?' \
+					./extern/gdextension/gdextension_interface.h | grep -v string ; \
+				) | sort | uniq | sed -E 's/(\w+)/\t\t"\1",/g' \
+			) \
+			<(grep -h -o --color=no -P '(?:\bstatic inline \w+\*? )\w+\b' ./src/extension/extension.h \
+				| sed -E 's/.* (\w+)$/\t\t"\1",/g' | sort | uniq)
+	*/
 
 	std::vector<std::string> referenced_extension_apis = {
 		"callable_custom_create",
@@ -359,9 +376,8 @@ extern "C" PYBIND11_EXPORT GDExtensionBool python_extension_init(
 		"get_variant_from_type_constructor",
 		"get_variant_to_type_constructor",
 		"global_get_singleton",
-		"godot_version",
-		"library",
-		"name",
+		"image_ptr",
+		"image_ptrw",
 		"object_destroy",
 		"object_get_class_name",
 		"object_get_instance_binding",
@@ -369,7 +385,24 @@ extern "C" PYBIND11_EXPORT GDExtensionBool python_extension_init(
 		"object_method_bind_ptrcall",
 		"object_set_instance",
 		"object_set_instance_binding",
+		"packed_byte_array_operator_index",
 		"packed_byte_array_operator_index_const",
+		"packed_color_array_operator_index",
+		"packed_color_array_operator_index_const",
+		"packed_float32_array_operator_index",
+		"packed_float32_array_operator_index_const",
+		"packed_float64_array_operator_index",
+		"packed_float64_array_operator_index_const",
+		"packed_int32_array_operator_index",
+		"packed_int32_array_operator_index_const",
+		"packed_int64_array_operator_index",
+		"packed_int64_array_operator_index_const",
+		"packed_vector2_array_operator_index",
+		"packed_vector2_array_operator_index_const",
+		"packed_vector3_array_operator_index",
+		"packed_vector3_array_operator_index_const",
+		"packed_vector4_array_operator_index",
+		"packed_vector4_array_operator_index_const",
 		"placeholder_script_instance_create",
 		"placeholder_script_instance_update",
 		"print_error",
@@ -379,7 +412,6 @@ extern "C" PYBIND11_EXPORT GDExtensionBool python_extension_init(
 		"string_new_with_utf8_chars",
 		"string_new_with_utf8_chars_and_len",
 		"string_to_utf8_chars",
-		"token",
 		"variant_call",
 		"variant_destroy",
 		"variant_get_ptr_builtin_method",
@@ -395,7 +427,7 @@ extern "C" PYBIND11_EXPORT GDExtensionBool python_extension_init(
 		"variant_get_ptr_utility_function",
 		"variant_get_type",
 		"variant_new_nil",
-		"variant_stringify"
+		"variant_stringify",
 	};
 
 

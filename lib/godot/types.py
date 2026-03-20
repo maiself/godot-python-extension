@@ -3,6 +3,7 @@ import abc
 import collections.abc
 import functools
 import operator
+import inspect
 
 import godot
 import godot.variant_types
@@ -89,5 +90,10 @@ class CustomCallable(collections.abc.Callable, metaclass=_CustomCallableMeta):
 
 		return NotImplemented
 
+
+
+# XXX: where to put this?
+def writable_memoryview(obj) -> memoryview:
+	return obj.__buffer__(inspect.BufferFlags.FULL)
 
 

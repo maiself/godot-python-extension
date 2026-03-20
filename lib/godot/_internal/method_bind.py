@@ -580,6 +580,7 @@ def bind_variant_operators(cls, type_info):
 				TypeInfo.from_api_info_type_string(indexing_return_type).variant_type
 			)
 
+			# TODO: raise KeyError
 			__getitem__ = getter
 			__setitem__ = setter
 
@@ -592,22 +593,22 @@ def bind_variant_operators(cls, type_info):
 				TypeInfo.from_api_info_type_string(type_info.name).variant_type,
 				TypeInfo.from_api_info_type_string(indexing_return_type).variant_type)
 
-			if type_info.methods.get('size'):
+			if type_info.methods.get('size') or type_info.get('members') or (type_info.name == 'String'): #TODO: slice
 				def __getitem__(self, index):
 					if index < 0:
-						index = self.size() - index
+						index = len(self) - index
 						if index < 0:
 							raise IndexError
-					if index >= self.size():
+					if index >= len(self):
 						raise IndexError
 					return getter(self, index)
 
 				def __setitem__(self, index, value):
 					if index < 0:
-						index = self.size() - index
+						index = len(self) - index
 						if index < 0:
 							raise IndexError
-					if index >= self.size():
+					if index >= len(self):
 						raise IndexError
 					setter(self, index, value)
 
@@ -633,13 +634,18 @@ def bind_variant_operators(cls, type_info):
 
 		if indexing_return_type in ['String', 'StringName']:
 			__getitem__inner = __getitem__
-			__getitem__ = lambda self, key: str(__getitem__inner(self, key)) # XXX
+			__getitem__ = lambda self, key: str(__getitem__inner(self, key)) # XXX: cast to str?
 
 		utils.swap_members(cls, '__getitem__', __getitem__)
 		utils.swap_members(cls, '__setitem__', __setitem__)
 
 		if hasattr(cls, 'size'):
 			utils.swap_members(cls, '__len__', cls.size)
+
+		elif type_info.get('members'):
+			_len = len(type_info.get('members'))
+			__len__ = lambda self: _len
+			utils.swap_members(cls, '__len__', __len__)
 
 	#if type_info.name == 'PackedStringArray':
 	#	print(pretty_string(type_info))

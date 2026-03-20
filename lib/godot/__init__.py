@@ -25,4 +25,5 @@ from .exposition import *
 
 from .types import CustomCallable
 
+from .types import writable_memoryview # XXX
 

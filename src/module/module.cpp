@@ -605,6 +605,10 @@ PYBIND11_EMBEDDED_MODULE(_gdextension, module_) {
 	py::implicitly_convertible<py::str, String>();
 	py::implicitly_convertible<py::str, StringName>();
 
+	// internal types
+
+	MemoryReference::def(module_);
+
 	// methods
 
 	module_.def("classdb_register_extension_class", [](
@@ -725,6 +729,56 @@ PYBIND11_EMBEDDED_MODULE(_gdextension, module_) {
 	module_.def("object_get_instance_id", [](const Object& object) {
 		return object.instance_id();
 	});
+
+
+
+
+
+	static auto image_memoryview = [](Object& object, bool writable) -> py::memoryview {
+		static auto* method_ptr = extension_interface::classdb_get_method_bind(
+			StringName("Image"), StringName("get_data_size"), 3905245786);
+
+		GDExtensionInt size;
+
+		extension_interface::object_method_bind_ptrcall(method_ptr, object, nullptr, (GDExtensionTypePtr)&size);
+
+		return MemoryReference::from(cast(object), py::buffer_info(
+			const_cast<uint8_t*>(
+				writable
+					? extension_interface::image_ptrw(object)
+					: extension_interface::image_ptr(object)
+			), // ptr
+			sizeof(uint8_t), // itemsize
+			py::format_descriptor<uint8_t>::format(), // format,
+
+			//1, // ndim
+			//{size}, // shape
+			//{1}, // strides
+
+			size, // size
+
+			!writable // readonly
+		));
+	};
+
+	module_.def("image_ptrw", [](Object& object) {
+		 // XXX: inheritance? std::string / StringName::operator != ?
+		if(std::string(object.get_class_name()) != std::string(StringName("Image"))) {
+			throw std::runtime_error("cannot call \"image_ptrw\" on non \"Image\" type");
+		}
+
+		return image_memoryview(object, true);
+	});
+
+	module_.def("image_ptr", [](Object& object) {
+		 // XXX: inheritance? std::string / StringName::operator != ?
+		if(std::string(object.get_class_name()) != std::string(StringName("Image"))) {
+			throw std::runtime_error("cannot call \"image_ptr\" on non \"Image\" type");
+		}
+
+		return image_memoryview(object, false);
+	});
+
 }
 
 

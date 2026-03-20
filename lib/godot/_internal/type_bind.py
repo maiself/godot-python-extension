@@ -326,6 +326,20 @@ def bind_class(class_info):
 
 		method_bind.bind_method(cls, class_info, method_info)
 
+	# XXX
+	if class_info.name == 'Image':
+		import inspect
+
+		def __buffer__(self, flags):
+			return gde.image_ptrw(self) if flags & inspect.BufferFlags.WRITABLE else gde.image_ptr(self)
+
+		__buffer__.__module__ = cls.__module__
+		__buffer__.__name__ = '__buffer__'
+		__buffer__.__qualname__ = f'{cls.__qualname__}.__buffer__'
+
+		cls.__buffer__ = __buffer__
+
+
 	for prop_info in class_info.get('properties', []):
 		if prop_info.get('is_hidden'): # XXX
 			continue

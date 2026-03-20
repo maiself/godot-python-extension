@@ -17,6 +17,8 @@ class String(gde.String):
 	def __repr__(self):
 		return repr(str(self))
 
+	__len__ = godot.String.length
+
 
 @utils.swap_members
 class StringName(gde.StringName):
@@ -74,12 +76,6 @@ collections.abc.Mapping.register(godot.Dictionary)
 
 
 # arrays
-
-@utils.swap_members
-class PackedByteArray(godot.PackedByteArray):
-	# TODO: implement buffer protocol
-	__buffer__ = lambda self, flags: memoryview(bytes(self))
-
 
 # register godot `Array` and `PackedArray` types as satisfying `collections.abc.Sequence`
 # TODO: check that interface is fully satisfied

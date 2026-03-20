@@ -16,7 +16,7 @@ namespace pygodot {
 
 
 template<InitializedPointer Pointer>
-py::object make_copy(Pointer ptr, GDExtensionVariantType variant_type, py::handle python_type = nullptr);
+py::object make_copy(Pointer ptr, GDExtensionVariantType variant_type, py::handle python_type/* = nullptr*/);
 
 template<MaybeUninitializedPointer Pointer, PythonObject ObjectType>
 auto make_copy(Pointer ptr, ObjectType obj, GDExtensionVariantType variant_type)

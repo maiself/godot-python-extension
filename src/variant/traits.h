@@ -662,6 +662,11 @@ auto variant_type_from_instance_inferred_checked(std::convertible_to<py::handle>
 
 
 
+// XXX: forward declare, is there a better place for this?
+template<InitializedPointer Pointer>
+py::object make_copy(Pointer ptr, GDExtensionVariantType variant_type, py::handle python_type = nullptr);
+
+
 
 } // namespace pygodot
 

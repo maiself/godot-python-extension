@@ -6,6 +6,7 @@
 
 #include "extension/extension.h"
 #include "variant/traits.h"
+#include "variant/buffer_traits.h"
 
 
 namespace pygodot {
@@ -68,8 +69,20 @@ class VariantTypeBase {
 		return static_cast<Type*>(this);
 	}
 
+	static constexpr size_t type_align = []() constexpr {
+		auto align = std::min(variant_type_size<Type>, alignof(std::max_align_t));
+		if constexpr(VariantBufferType<Type>) {
+			for(size_t i = variant_buffer_ndim<Type> - 1; i >= 0 && !std::has_single_bit(align); i--) {
+				align /= variant_buffer_shape<Type>[i];
+			}
+		}
+		return align;
+	}();
+
 protected:
-	std::aligned_storage_t<variant_type_size<Type>> data;
+	std::aligned_storage_t<variant_type_size<Type>, type_align> data;
+
+	static_assert(alignof(decltype(data)) == type_align);
 
 	template<int constructor_index, typename... Args>
 	void construct(Args&&... args) {
@@ -80,6 +93,8 @@ protected:
 		constructor(uninitialized(this_as_type()),
 			std::array<GDExtensionConstTypePtr, sizeof...(Args)>{{std::forward<Args>(args)...}}.data());
 	}
+
+	static void custom_type_setup(PyHeapTypeObject* heap_type);
 
 public:
 	VariantTypeBase(const uninitialized_t&) {
@@ -123,15 +138,16 @@ class type_name : public VariantTypeBase<type_name> { \
 	static inline std::unique_ptr<class_def_t> class_def; \
 	\
 public: \
-	using VariantTypeBase::VariantTypeBase; \
+	using VariantTypeBase<type_name>::VariantTypeBase; \
 	\
-	using VariantTypeBase::operator GDExtensionTypePtr; \
-	using VariantTypeBase::operator GDExtensionConstTypePtr; \
+	using VariantTypeBase<type_name>::operator GDExtensionTypePtr; \
+	using VariantTypeBase<type_name>::operator GDExtensionConstTypePtr; \
 	\
 	typedef GDExtensionUninitializedTypePtr uninitialized_ptr_t; \
 	\
 	static void pre_def(py::module_& module_) { \
-		class_def = std::make_unique<class_def_t>(module_, #type_name); \
+		class_def = std::make_unique<class_def_t>(module_, #type_name, \
+			py::custom_type_setup(custom_type_setup)); \
 	} \
 	static void def(py::module_& module_) { \
 		def_init_uninitialized(*class_def); \
@@ -139,7 +155,10 @@ public: \
 	} \
 };
 
+
+
 } // namespace pygodot
+
 
 namespace godot {
 
@@ -187,6 +206,32 @@ EMPTY_VARIANT_TYPE(PackedVector4Array)
 
 #undef EMPTY_VARIANT_TYPE
 
+
+static_assert(sizeof(Vector3) == sizeof(float) * 3);
+static_assert(alignof(Vector3) == alignof(float));
+
+//static_assert(alignof(StringName) >= alignof(void*));
+static_assert(alignof(PackedByteArray) >= alignof(void*));
+
+
 } // namespace godot
+
+
+
+namespace pygodot {
+
+template<VariantType Type>
+void VariantTypeBase<Type>::custom_type_setup(PyHeapTypeObject* heap_type) {
+	auto* ht_type = &heap_type->ht_type;
+
+	if constexpr(VariantBufferType<Type>) {
+		ht_type->tp_as_buffer = &heap_type->as_buffer;
+
+		ht_type->tp_as_buffer->bf_getbuffer = variant_get_buffer<Type>;
+		ht_type->tp_as_buffer->bf_releasebuffer = variant_release_buffer<Type>;
+	}
+}
+
+} // namespace pygodot
 
 
