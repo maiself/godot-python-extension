@@ -1,0 +1,1935 @@
+{
+	"header": {
+		"version_major": 4,
+		"version_minor": 6,
+		"version_patch": 0,
+		"version_status": "stable",
+		"version_build": "official",
+		"version_full_name": "Godot Engine v4.6.stable.official",
+		"precision": "single"
+	},
+	"builtin_class_sizes": [
+		{
+			"build_configuration": "float_32",
+			"sizes": [
+				{
+					"name": "Nil",
+					"size": 0
+				},
+				{
+					"name": "bool",
+					"size": 1
+				},
+				{
+					"name": "int",
+					"size": 8
+				},
+				{
+					"name": "float",
+					"size": 8
+				},
+				{
+					"name": "String",
+					"size": 4
+				},
+				{
+					"name": "Vector2",
+					"size": 8
+				},
+				{
+					"name": "Vector2i",
+					"size": 8
+				},
+				{
+					"name": "Rect2",
+					"size": 16
+				},
+				{
+					"name": "Rect2i",
+					"size": 16
+				},
+				{
+					"name": "Vector3",
+					"size": 12
+				},
+				{
+					"name": "Vector3i",
+					"size": 12
+				},
+				{
+					"name": "Transform2D",
+					"size": 24
+				},
+				{
+					"name": "Vector4",
+					"size": 16
+				},
+				{
+					"name": "Vector4i",
+					"size": 16
+				},
+				{
+					"name": "Plane",
+					"size": 16
+				},
+				{
+					"name": "Quaternion",
+					"size": 16
+				},
+				{
+					"name": "AABB",
+					"size": 24
+				},
+				{
+					"name": "Basis",
+					"size": 36
+				},
+				{
+					"name": "Transform3D",
+					"size": 48
+				},
+				{
+					"name": "Projection",
+					"size": 64
+				},
+				{
+					"name": "Color",
+					"size": 16
+				},
+				{
+					"name": "StringName",
+					"size": 4
+				},
+				{
+					"name": "NodePath",
+					"size": 4
+				},
+				{
+					"name": "RID",
+					"size": 8
+				},
+				{
+					"name": "Object",
+					"size": 4
+				},
+				{
+					"name": "Callable",
+					"size": 16
+				},
+				{
+					"name": "Signal",
+					"size": 16
+				},
+				{
+					"name": "Dictionary",
+					"size": 4
+				},
+				{
+					"name": "Array",
+					"size": 4
+				},
+				{
+					"name": "PackedByteArray",
+					"size": 8
+				},
+				{
+					"name": "PackedInt32Array",
+					"size": 8
+				},
+				{
+					"name": "PackedInt64Array",
+					"size": 8
+				},
+				{
+					"name": "PackedFloat32Array",
+					"size": 8
+				},
+				{
+					"name": "PackedFloat64Array",
+					"size": 8
+				},
+				{
+					"name": "PackedStringArray",
+					"size": 8
+				},
+				{
+					"name": "PackedVector2Array",
+					"size": 8
+				},
+				{
+					"name": "PackedVector3Array",
+					"size": 8
+				},
+				{
+					"name": "PackedColorArray",
+					"size": 8
+				},
+				{
+					"name": "PackedVector4Array",
+					"size": 8
+				},
+				{
+					"name": "Variant",
+					"size": 24
+				}
+			]
+		},
+		{
+			"build_configuration": "float_64",
+			"sizes": [
+				{
+					"name": "Nil",
+					"size": 0
+				},
+				{
+					"name": "bool",
+					"size": 1
+				},
+				{
+					"name": "int",
+					"size": 8
+				},
+				{
+					"name": "float",
+					"size": 8
+				},
+				{
+					"name": "String",
+					"size": 8
+				},
+				{
+					"name": "Vector2",
+					"size": 8
+				},
+				{
+					"name": "Vector2i",
+					"size": 8
+				},
+				{
+					"name": "Rect2",
+					"size": 16
+				},
+				{
+					"name": "Rect2i",
+					"size": 16
+				},
+				{
+					"name": "Vector3",
+					"size": 12
+				},
+				{
+					"name": "Vector3i",
+					"size": 12
+				},
+				{
+					"name": "Transform2D",
+					"size": 24
+				},
+				{
+					"name": "Vector4",
+					"size": 16
+				},
+				{
+					"name": "Vector4i",
+					"size": 16
+				},
+				{
+					"name": "Plane",
+					"size": 16
+				},
+				{
+					"name": "Quaternion",
+					"size": 16
+				},
+				{
+					"name": "AABB",
+					"size": 24
+				},
+				{
+					"name": "Basis",
+					"size": 36
+				},
+				{
+					"name": "Transform3D",
+					"size": 48
+				},
+				{
+					"name": "Projection",
+					"size": 64
+				},
+				{
+					"name": "Color",
+					"size": 16
+				},
+				{
+					"name": "StringName",
+					"size": 8
+				},
+				{
+					"name": "NodePath",
+					"size": 8
+				},
+				{
+					"name": "RID",
+					"size": 8
+				},
+				{
+					"name": "Object",
+					"size": 8
+				},
+				{
+					"name": "Callable",
+					"size": 16
+				},
+				{
+					"name": "Signal",
+					"size": 16
+				},
+				{
+					"name": "Dictionary",
+					"size": 8
+				},
+				{
+					"name": "Array",
+					"size": 8
+				},
+				{
+					"name": "PackedByteArray",
+					"size": 16
+				},
+				{
+					"name": "PackedInt32Array",
+					"size": 16
+				},
+				{
+					"name": "PackedInt64Array",
+					"size": 16
+				},
+				{
+					"name": "PackedFloat32Array",
+					"size": 16
+				},
+				{
+					"name": "PackedFloat64Array",
+					"size": 16
+				},
+				{
+					"name": "PackedStringArray",
+					"size": 16
+				},
+				{
+					"name": "PackedVector2Array",
+					"size": 16
+				},
+				{
+					"name": "PackedVector3Array",
+					"size": 16
+				},
+				{
+					"name": "PackedColorArray",
+					"size": 16
+				},
+				{
+					"name": "PackedVector4Array",
+					"size": 16
+				},
+				{
+					"name": "Variant",
+					"size": 24
+				}
+			]
+		},
+		{
+			"build_configuration": "double_32",
+			"sizes": [
+				{
+					"name": "Nil",
+					"size": 0
+				},
+				{
+					"name": "bool",
+					"size": 1
+				},
+				{
+					"name": "int",
+					"size": 8
+				},
+				{
+					"name": "float",
+					"size": 8
+				},
+				{
+					"name": "String",
+					"size": 4
+				},
+				{
+					"name": "Vector2",
+					"size": 16
+				},
+				{
+					"name": "Vector2i",
+					"size": 8
+				},
+				{
+					"name": "Rect2",
+					"size": 32
+				},
+				{
+					"name": "Rect2i",
+					"size": 16
+				},
+				{
+					"name": "Vector3",
+					"size": 24
+				},
+				{
+					"name": "Vector3i",
+					"size": 12
+				},
+				{
+					"name": "Transform2D",
+					"size": 48
+				},
+				{
+					"name": "Vector4",
+					"size": 32
+				},
+				{
+					"name": "Vector4i",
+					"size": 16
+				},
+				{
+					"name": "Plane",
+					"size": 32
+				},
+				{
+					"name": "Quaternion",
+					"size": 32
+				},
+				{
+					"name": "AABB",
+					"size": 48
+				},
+				{
+					"name": "Basis",
+					"size": 72
+				},
+				{
+					"name": "Transform3D",
+					"size": 96
+				},
+				{
+					"name": "Projection",
+					"size": 128
+				},
+				{
+					"name": "Color",
+					"size": 16
+				},
+				{
+					"name": "StringName",
+					"size": 4
+				},
+				{
+					"name": "NodePath",
+					"size": 4
+				},
+				{
+					"name": "RID",
+					"size": 8
+				},
+				{
+					"name": "Object",
+					"size": 4
+				},
+				{
+					"name": "Callable",
+					"size": 16
+				},
+				{
+					"name": "Signal",
+					"size": 16
+				},
+				{
+					"name": "Dictionary",
+					"size": 4
+				},
+				{
+					"name": "Array",
+					"size": 4
+				},
+				{
+					"name": "PackedByteArray",
+					"size": 8
+				},
+				{
+					"name": "PackedInt32Array",
+					"size": 8
+				},
+				{
+					"name": "PackedInt64Array",
+					"size": 8
+				},
+				{
+					"name": "PackedFloat32Array",
+					"size": 8
+				},
+				{
+					"name": "PackedFloat64Array",
+					"size": 8
+				},
+				{
+					"name": "PackedStringArray",
+					"size": 8
+				},
+				{
+					"name": "PackedVector2Array",
+					"size": 8
+				},
+				{
+					"name": "PackedVector3Array",
+					"size": 8
+				},
+				{
+					"name": "PackedColorArray",
+					"size": 8
+				},
+				{
+					"name": "PackedVector4Array",
+					"size": 8
+				},
+				{
+					"name": "Variant",
+					"size": 40
+				}
+			]
+		},
+		{
+			"build_configuration": "double_64",
+			"sizes": [
+				{
+					"name": "Nil",
+					"size": 0
+				},
+				{
+					"name": "bool",
+					"size": 1
+				},
+				{
+					"name": "int",
+					"size": 8
+				},
+				{
+					"name": "float",
+					"size": 8
+				},
+				{
+					"name": "String",
+					"size": 8
+				},
+				{
+					"name": "Vector2",
+					"size": 16
+				},
+				{
+					"name": "Vector2i",
+					"size": 8
+				},
+				{
+					"name": "Rect2",
+					"size": 32
+				},
+				{
+					"name": "Rect2i",
+					"size": 16
+				},
+				{
+					"name": "Vector3",
+					"size": 24
+				},
+				{
+					"name": "Vector3i",
+					"size": 12
+				},
+				{
+					"name": "Transform2D",
+					"size": 48
+				},
+				{
+					"name": "Vector4",
+					"size": 32
+				},
+				{
+					"name": "Vector4i",
+					"size": 16
+				},
+				{
+					"name": "Plane",
+					"size": 32
+				},
+				{
+					"name": "Quaternion",
+					"size": 32
+				},
+				{
+					"name": "AABB",
+					"size": 48
+				},
+				{
+					"name": "Basis",
+					"size": 72
+				},
+				{
+					"name": "Transform3D",
+					"size": 96
+				},
+				{
+					"name": "Projection",
+					"size": 128
+				},
+				{
+					"name": "Color",
+					"size": 16
+				},
+				{
+					"name": "StringName",
+					"size": 8
+				},
+				{
+					"name": "NodePath",
+					"size": 8
+				},
+				{
+					"name": "RID",
+					"size": 8
+				},
+				{
+					"name": "Object",
+					"size": 8
+				},
+				{
+					"name": "Callable",
+					"size": 16
+				},
+				{
+					"name": "Signal",
+					"size": 16
+				},
+				{
+					"name": "Dictionary",
+					"size": 8
+				},
+				{
+					"name": "Array",
+					"size": 8
+				},
+				{
+					"name": "PackedByteArray",
+					"size": 16
+				},
+				{
+					"name": "PackedInt32Array",
+					"size": 16
+				},
+				{
+					"name": "PackedInt64Array",
+					"size": 16
+				},
+				{
+					"name": "PackedFloat32Array",
+					"size": 16
+				},
+				{
+					"name": "PackedFloat64Array",
+					"size": 16
+				},
+				{
+					"name": "PackedStringArray",
+					"size": 16
+				},
+				{
+					"name": "PackedVector2Array",
+					"size": 16
+				},
+				{
+					"name": "PackedVector3Array",
+					"size": 16
+				},
+				{
+					"name": "PackedColorArray",
+					"size": 16
+				},
+				{
+					"name": "PackedVector4Array",
+					"size": 16
+				},
+				{
+					"name": "Variant",
+					"size": 40
+				}
+			]
+		}
+	],
+	"builtin_class_member_offsets": [
+		{
+			"build_configuration": "float_32",
+			"classes": [
+				{
+					"name": "Vector2",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "float"
+						},
+						{
+							"member": "y",
+							"offset": 4,
+							"meta": "float"
+						}
+					]
+				},
+				{
+					"name": "Vector2i",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "int32"
+						},
+						{
+							"member": "y",
+							"offset": 4,
+							"meta": "int32"
+						}
+					]
+				},
+				{
+					"name": "Rect2",
+					"members": [
+						{
+							"member": "position",
+							"offset": 0,
+							"meta": "Vector2"
+						},
+						{
+							"member": "size",
+							"offset": 8,
+							"meta": "Vector2"
+						}
+					]
+				},
+				{
+					"name": "Rect2i",
+					"members": [
+						{
+							"member": "position",
+							"offset": 0,
+							"meta": "Vector2i"
+						},
+						{
+							"member": "size",
+							"offset": 8,
+							"meta": "Vector2i"
+						}
+					]
+				},
+				{
+					"name": "Vector3",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "float"
+						},
+						{
+							"member": "y",
+							"offset": 4,
+							"meta": "float"
+						},
+						{
+							"member": "z",
+							"offset": 8,
+							"meta": "float"
+						}
+					]
+				},
+				{
+					"name": "Vector3i",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "int32"
+						},
+						{
+							"member": "y",
+							"offset": 4,
+							"meta": "int32"
+						},
+						{
+							"member": "z",
+							"offset": 8,
+							"meta": "int32"
+						}
+					]
+				},
+				{
+					"name": "Transform2D",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "Vector2"
+						},
+						{
+							"member": "y",
+							"offset": 8,
+							"meta": "Vector2"
+						},
+						{
+							"member": "origin",
+							"offset": 16,
+							"meta": "Vector2"
+						}
+					]
+				},
+				{
+					"name": "Vector4",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "float"
+						},
+						{
+							"member": "y",
+							"offset": 4,
+							"meta": "float"
+						},
+						{
+							"member": "z",
+							"offset": 8,
+							"meta": "float"
+						},
+						{
+							"member": "w",
+							"offset": 12,
+							"meta": "float"
+						}
+					]
+				},
+				{
+					"name": "Vector4i",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "int32"
+						},
+						{
+							"member": "y",
+							"offset": 4,
+							"meta": "int32"
+						},
+						{
+							"member": "z",
+							"offset": 8,
+							"meta": "int32"
+						},
+						{
+							"member": "w",
+							"offset": 12,
+							"meta": "int32"
+						}
+					]
+				},
+				{
+					"name": "Plane",
+					"members": [
+						{
+							"member": "normal",
+							"offset": 0,
+							"meta": "Vector3"
+						},
+						{
+							"member": "d",
+							"offset": 12,
+							"meta": "float"
+						}
+					]
+				},
+				{
+					"name": "Quaternion",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "float"
+						},
+						{
+							"member": "y",
+							"offset": 4,
+							"meta": "float"
+						},
+						{
+							"member": "z",
+							"offset": 8,
+							"meta": "float"
+						},
+						{
+							"member": "w",
+							"offset": 12,
+							"meta": "float"
+						}
+					]
+				},
+				{
+					"name": "AABB",
+					"members": [
+						{
+							"member": "position",
+							"offset": 0,
+							"meta": "Vector3"
+						},
+						{
+							"member": "size",
+							"offset": 12,
+							"meta": "Vector3"
+						}
+					]
+				},
+				{
+					"name": "Basis",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "Vector3"
+						},
+						{
+							"member": "y",
+							"offset": 12,
+							"meta": "Vector3"
+						},
+						{
+							"member": "z",
+							"offset": 24,
+							"meta": "Vector3"
+						}
+					]
+				},
+				{
+					"name": "Transform3D",
+					"members": [
+						{
+							"member": "basis",
+							"offset": 0,
+							"meta": "Basis"
+						},
+						{
+							"member": "origin",
+							"offset": 36,
+							"meta": "Vector3"
+						}
+					]
+				},
+				{
+					"name": "Projection",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "Vector4"
+						},
+						{
+							"member": "y",
+							"offset": 16,
+							"meta": "Vector4"
+						},
+						{
+							"member": "z",
+							"offset": 32,
+							"meta": "Vector4"
+						},
+						{
+							"member": "w",
+							"offset": 48,
+							"meta": "Vector4"
+						}
+					]
+				},
+				{
+					"name": "Color",
+					"members": [
+						{
+							"member": "r",
+							"offset": 0,
+							"meta": "float"
+						},
+						{
+							"member": "g",
+							"offset": 4,
+							"meta": "float"
+						},
+						{
+							"member": "b",
+							"offset": 8,
+							"meta": "float"
+						},
+						{
+							"member": "a",
+							"offset": 12,
+							"meta": "float"
+						}
+					]
+				}
+			]
+		},
+		{
+			"build_configuration": "float_64",
+			"classes": [
+				{
+					"name": "Vector2",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "float"
+						},
+						{
+							"member": "y",
+							"offset": 4,
+							"meta": "float"
+						}
+					]
+				},
+				{
+					"name": "Vector2i",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "int32"
+						},
+						{
+							"member": "y",
+							"offset": 4,
+							"meta": "int32"
+						}
+					]
+				},
+				{
+					"name": "Rect2",
+					"members": [
+						{
+							"member": "position",
+							"offset": 0,
+							"meta": "Vector2"
+						},
+						{
+							"member": "size",
+							"offset": 8,
+							"meta": "Vector2"
+						}
+					]
+				},
+				{
+					"name": "Rect2i",
+					"members": [
+						{
+							"member": "position",
+							"offset": 0,
+							"meta": "Vector2i"
+						},
+						{
+							"member": "size",
+							"offset": 8,
+							"meta": "Vector2i"
+						}
+					]
+				},
+				{
+					"name": "Vector3",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "float"
+						},
+						{
+							"member": "y",
+							"offset": 4,
+							"meta": "float"
+						},
+						{
+							"member": "z",
+							"offset": 8,
+							"meta": "float"
+						}
+					]
+				},
+				{
+					"name": "Vector3i",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "int32"
+						},
+						{
+							"member": "y",
+							"offset": 4,
+							"meta": "int32"
+						},
+						{
+							"member": "z",
+							"offset": 8,
+							"meta": "int32"
+						}
+					]
+				},
+				{
+					"name": "Transform2D",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "Vector2"
+						},
+						{
+							"member": "y",
+							"offset": 8,
+							"meta": "Vector2"
+						},
+						{
+							"member": "origin",
+							"offset": 16,
+							"meta": "Vector2"
+						}
+					]
+				},
+				{
+					"name": "Vector4",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "float"
+						},
+						{
+							"member": "y",
+							"offset": 4,
+							"meta": "float"
+						},
+						{
+							"member": "z",
+							"offset": 8,
+							"meta": "float"
+						},
+						{
+							"member": "w",
+							"offset": 12,
+							"meta": "float"
+						}
+					]
+				},
+				{
+					"name": "Vector4i",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "int32"
+						},
+						{
+							"member": "y",
+							"offset": 4,
+							"meta": "int32"
+						},
+						{
+							"member": "z",
+							"offset": 8,
+							"meta": "int32"
+						},
+						{
+							"member": "w",
+							"offset": 12,
+							"meta": "int32"
+						}
+					]
+				},
+				{
+					"name": "Plane",
+					"members": [
+						{
+							"member": "normal",
+							"offset": 0,
+							"meta": "Vector3"
+						},
+						{
+							"member": "d",
+							"offset": 12,
+							"meta": "float"
+						}
+					]
+				},
+				{
+					"name": "Quaternion",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "float"
+						},
+						{
+							"member": "y",
+							"offset": 4,
+							"meta": "float"
+						},
+						{
+							"member": "z",
+							"offset": 8,
+							"meta": "float"
+						},
+						{
+							"member": "w",
+							"offset": 12,
+							"meta": "float"
+						}
+					]
+				},
+				{
+					"name": "AABB",
+					"members": [
+						{
+							"member": "position",
+							"offset": 0,
+							"meta": "Vector3"
+						},
+						{
+							"member": "size",
+							"offset": 12,
+							"meta": "Vector3"
+						}
+					]
+				},
+				{
+					"name": "Basis",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "Vector3"
+						},
+						{
+							"member": "y",
+							"offset": 12,
+							"meta": "Vector3"
+						},
+						{
+							"member": "z",
+							"offset": 24,
+							"meta": "Vector3"
+						}
+					]
+				},
+				{
+					"name": "Transform3D",
+					"members": [
+						{
+							"member": "basis",
+							"offset": 0,
+							"meta": "Basis"
+						},
+						{
+							"member": "origin",
+							"offset": 36,
+							"meta": "Vector3"
+						}
+					]
+				},
+				{
+					"name": "Projection",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "Vector4"
+						},
+						{
+							"member": "y",
+							"offset": 16,
+							"meta": "Vector4"
+						},
+						{
+							"member": "z",
+							"offset": 32,
+							"meta": "Vector4"
+						},
+						{
+							"member": "w",
+							"offset": 48,
+							"meta": "Vector4"
+						}
+					]
+				},
+				{
+					"name": "Color",
+					"members": [
+						{
+							"member": "r",
+							"offset": 0,
+							"meta": "float"
+						},
+						{
+							"member": "g",
+							"offset": 4,
+							"meta": "float"
+						},
+						{
+							"member": "b",
+							"offset": 8,
+							"meta": "float"
+						},
+						{
+							"member": "a",
+							"offset": 12,
+							"meta": "float"
+						}
+					]
+				}
+			]
+		},
+		{
+			"build_configuration": "double_32",
+			"classes": [
+				{
+					"name": "Vector2",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "double"
+						},
+						{
+							"member": "y",
+							"offset": 8,
+							"meta": "double"
+						}
+					]
+				},
+				{
+					"name": "Vector2i",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "int32"
+						},
+						{
+							"member": "y",
+							"offset": 4,
+							"meta": "int32"
+						}
+					]
+				},
+				{
+					"name": "Rect2",
+					"members": [
+						{
+							"member": "position",
+							"offset": 0,
+							"meta": "Vector2"
+						},
+						{
+							"member": "size",
+							"offset": 16,
+							"meta": "Vector2"
+						}
+					]
+				},
+				{
+					"name": "Rect2i",
+					"members": [
+						{
+							"member": "position",
+							"offset": 0,
+							"meta": "Vector2i"
+						},
+						{
+							"member": "size",
+							"offset": 8,
+							"meta": "Vector2i"
+						}
+					]
+				},
+				{
+					"name": "Vector3",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "double"
+						},
+						{
+							"member": "y",
+							"offset": 8,
+							"meta": "double"
+						},
+						{
+							"member": "z",
+							"offset": 16,
+							"meta": "double"
+						}
+					]
+				},
+				{
+					"name": "Vector3i",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "int32"
+						},
+						{
+							"member": "y",
+							"offset": 4,
+							"meta": "int32"
+						},
+						{
+							"member": "z",
+							"offset": 8,
+							"meta": "int32"
+						}
+					]
+				},
+				{
+					"name": "Transform2D",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "Vector2"
+						},
+						{
+							"member": "y",
+							"offset": 16,
+							"meta": "Vector2"
+						},
+						{
+							"member": "origin",
+							"offset": 32,
+							"meta": "Vector2"
+						}
+					]
+				},
+				{
+					"name": "Vector4",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "double"
+						},
+						{
+							"member": "y",
+							"offset": 8,
+							"meta": "double"
+						},
+						{
+							"member": "z",
+							"offset": 16,
+							"meta": "double"
+						},
+						{
+							"member": "w",
+							"offset": 24,
+							"meta": "double"
+						}
+					]
+				},
+				{
+					"name": "Vector4i",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "int32"
+						},
+						{
+							"member": "y",
+							"offset": 4,
+							"meta": "int32"
+						},
+						{
+							"member": "z",
+							"offset": 8,
+							"meta": "int32"
+						},
+						{
+							"member": "w",
+							"offset": 12,
+							"meta": "int32"
+						}
+					]
+				},
+				{
+					"name": "Plane",
+					"members": [
+						{
+							"member": "normal",
+							"offset": 0,
+							"meta": "Vector3"
+						},
+						{
+							"member": "d",
+							"offset": 24,
+							"meta": "double"
+						}
+					]
+				},
+				{
+					"name": "Quaternion",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "double"
+						},
+						{
+							"member": "y",
+							"offset": 8,
+							"meta": "double"
+						},
+						{
+							"member": "z",
+							"offset": 16,
+							"meta": "double"
+						},
+						{
+							"member": "w",
+							"offset": 24,
+							"meta": "double"
+						}
+					]
+				},
+				{
+					"name": "AABB",
+					"members": [
+						{
+							"member": "position",
+							"offset": 0,
+							"meta": "Vector3"
+						},
+						{
+							"member": "size",
+							"offset": 24,
+							"meta": "Vector3"
+						}
+					]
+				},
+				{
+					"name": "Basis",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "Vector3"
+						},
+						{
+							"member": "y",
+							"offset": 24,
+							"meta": "Vector3"
+						},
+						{
+							"member": "z",
+							"offset": 48,
+							"meta": "Vector3"
+						}
+					]
+				},
+				{
+					"name": "Transform3D",
+					"members": [
+						{
+							"member": "basis",
+							"offset": 0,
+							"meta": "Basis"
+						},
+						{
+							"member": "origin",
+							"offset": 72,
+							"meta": "Vector3"
+						}
+					]
+				},
+				{
+					"name": "Projection",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "Vector4"
+						},
+						{
+							"member": "y",
+							"offset": 32,
+							"meta": "Vector4"
+						},
+						{
+							"member": "z",
+							"offset": 64,
+							"meta": "Vector4"
+						},
+						{
+							"member": "w",
+							"offset": 96,
+							"meta": "Vector4"
+						}
+					]
+				},
+				{
+					"name": "Color",
+					"members": [
+						{
+							"member": "r",
+							"offset": 0,
+							"meta": "float"
+						},
+						{
+							"member": "g",
+							"offset": 4,
+							"meta": "float"
+						},
+						{
+							"member": "b",
+							"offset": 8,
+							"meta": "float"
+						},
+						{
+							"member": "a",
+							"offset": 12,
+							"meta": "float"
+						}
+					]
+				}
+			]
+		},
+		{
+			"build_configuration": "double_64",
+			"classes": [
+				{
+					"name": "Vector2",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "double"
+						},
+						{
+							"member": "y",
+							"offset": 8,
+							"meta": "double"
+						}
+					]
+				},
+				{
+					"name": "Vector2i",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "int32"
+						},
+						{
+							"member": "y",
+							"offset": 4,
+							"meta": "int32"
+						}
+					]
+				},
+				{
+					"name": "Rect2",
+					"members": [
+						{
+							"member": "position",
+							"offset": 0,
+							"meta": "Vector2"
+						},
+						{
+							"member": "size",
+							"offset": 16,
+							"meta": "Vector2"
+						}
+					]
+				},
+				{
+					"name": "Rect2i",
+					"members": [
+						{
+							"member": "position",
+							"offset": 0,
+							"meta": "Vector2i"
+						},
+						{
+							"member": "size",
+							"offset": 8,
+							"meta": "Vector2i"
+						}
+					]
+				},
+				{
+					"name": "Vector3",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "double"
+						},
+						{
+							"member": "y",
+							"offset": 8,
+							"meta": "double"
+						},
+						{
+							"member": "z",
+							"offset": 16,
+							"meta": "double"
+						}
+					]
+				},
+				{
+					"name": "Vector3i",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "int32"
+						},
+						{
+							"member": "y",
+							"offset": 4,
+							"meta": "int32"
+						},
+						{
+							"member": "z",
+							"offset": 8,
+							"meta": "int32"
+						}
+					]
+				},
+				{
+					"name": "Transform2D",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "Vector2"
+						},
+						{
+							"member": "y",
+							"offset": 16,
+							"meta": "Vector2"
+						},
+						{
+							"member": "origin",
+							"offset": 32,
+							"meta": "Vector2"
+						}
+					]
+				},
+				{
+					"name": "Vector4",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "double"
+						},
+						{
+							"member": "y",
+							"offset": 8,
+							"meta": "double"
+						},
+						{
+							"member": "z",
+							"offset": 16,
+							"meta": "double"
+						},
+						{
+							"member": "w",
+							"offset": 24,
+							"meta": "double"
+						}
+					]
+				},
+				{
+					"name": "Vector4i",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "int32"
+						},
+						{
+							"member": "y",
+							"offset": 4,
+							"meta": "int32"
+						},
+						{
+							"member": "z",
+							"offset": 8,
+							"meta": "int32"
+						},
+						{
+							"member": "w",
+							"offset": 12,
+							"meta": "int32"
+						}
+					]
+				},
+				{
+					"name": "Plane",
+					"members": [
+						{
+							"member": "normal",
+							"offset": 0,
+							"meta": "Vector3"
+						},
+						{
+							"member": "d",
+							"offset": 24,
+							"meta": "double"
+						}
+					]
+				},
+				{
+					"name": "Quaternion",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "double"
+						},
+						{
+							"member": "y",
+							"offset": 8,
+							"meta": "double"
+						},
+						{
+							"member": "z",
+							"offset": 16,
+							"meta": "double"
+						},
+						{
+							"member": "w",
+							"offset": 24,
+							"meta": "double"
+						}
+					]
+				},
+				{
+					"name": "AABB",
+					"members": [
+						{
+							"member": "position",
+							"offset": 0,
+							"meta": "Vector3"
+						},
+						{
+							"member": "size",
+							"offset": 24,
+							"meta": "Vector3"
+						}
+					]
+				},
+				{
+					"name": "Basis",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "Vector3"
+						},
+						{
+							"member": "y",
+							"offset": 24,
+							"meta": "Vector3"
+						},
+						{
+							"member": "z",
+							"offset": 48,
+							"meta": "Vector3"
+						}
+					]
+				},
+				{
+					"name": "Transform3D",
+					"members": [
+						{
+							"member": "basis",
+							"offset": 0,
+							"meta": "Basis"
+						},
+						{
+							"member": "origin",
+							"offset": 72,
+							"meta": "Vector3"
+						}
+					]
+				},
+				{
+					"name": "Projection",
+					"members": [
+						{
+							"member": "x",
+							"offset": 0,
+							"meta": "Vector4"
+						},
+						{
+							"member": "y",
+							"offset": 32,
+							"meta": "Vector4"
+						},
+						{
+							"member": "z",
+							"offset": 64,
+							"meta": "Vector4"
+						},
+						{
+							"member": "w",
+							"offset": 96,
+							"meta": "Vector4"
+						}
+					]
+				},
+				{
+					"name": "Color",
+					"members": [
+						{
+							"member": "r",
+							"offset": 0,
+							"meta": "float"
+						},
+						{
+							"member": "g",
+							"offset": 4,
+							"meta": "float"
+						},
+						{
+							"member": "b",
+							"offset": 8,
+							"meta": "float"
+						},
+						{
+							"member": "a",
+							"offset": 12,
+							"meta": "float"
+						}
+					]
+				}
+			]
+		}
+	]
+}
