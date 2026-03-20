@@ -169,8 +169,7 @@ static bool init_python_isolated() {
 	auto py_major = std::to_string(PY_MAJOR_VERSION);
 	auto py_minor = std::to_string(PY_MINOR_VERSION);
 	auto py_version = py_major + "." + py_minor;
-	auto py_version_no_dot = py_major + py_minor;
-	auto python_zip_name = "python" + py_version_no_dot + ".zip";
+	auto python_zip_name = "python" + py_version + "-lib.zip";
 	auto python_lib_name = "python" + py_version;
 
 	add_module_search_path((runtime_config.python_home_path / python_zip_name).string());
